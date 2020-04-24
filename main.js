@@ -19,31 +19,8 @@ let emotes = [];
 
 async function getEmotes(check) {
     const proxyurl = 'https://cors-anywhere.herokuapp.com/';
-    // first, we need to get the channels ID
-    let res = await fetch('https://api.ivr.fi/twitch/resolve/' + channel, {
-        method: "GET"
-        }).then(function(response) { return response.json() },
-        function(error) { log(error.message); }
-    );
-    let channelID = res.id;
-    log(channelID)
-    // next, we want to get a list of every channel sub emote, if any.
-    res = await fetch(proxyurl + 'https://api.twitchemotes.com/api/v4/channels/' + channelID, {
-        method: "GET"
-        }).then(function(response) { return response.json() },
-        function(error) { log(error.message); }
-    );
-    if (!res.error) {
-        for(var i = 0; i < res.emotes.length; i++) {
-            let emote = {
-                emoteName : res.emotes[i].code,
-                emoteURL : null
-            };
-            emotes.push(emote);
-        }
-    } else { log('Error getting twitch sub emotes'); }
-    // now we want all the FFZ emotes
-    res = await fetch(proxyurl + 'https://api.frankerfacez.com/v1/room/' + channel, {
+    // get FFZ emotes
+    let res = await fetch('https://api.frankerfacez.com/v1/room/' + channel, {
         method: "GET"
         }).then(function(response) { return response.json() },
         function(error) { log(error.message); }
@@ -53,12 +30,12 @@ async function getEmotes(check) {
         for (var i = 0; i < res.sets[setName[0]].emoticons.length; i++) {
             let emote = {
                 emoteName: res.sets[setName[0]].emoticons[i].name,
-                emoteURL: res.sets[setName[0]].emoticons[i].urls['1']
+                emoteURL: 'https://' + res.sets[setName[0]].emoticons[i].urls['1'].split('//').pop()
             }
             emotes.push(emote);
         }
     } else { log('Error getting twitch ffz emotes'); }
-    // finally, get all BTTV emotes 
+    // get all BTTV emotes
     res = await fetch('https://api.betterttv.net/2/channels/' + channel, {
         method: "GET"
         }).then(function(response) { return response.json() },
@@ -72,28 +49,30 @@ async function getEmotes(check) {
             }
             emotes.push(emote);
         }
-        console.log(emotes);
+        log(emotes);
     } else { log('Error getting twitch bttv emotes'); }
 }
 
-// Find Emotes and return name + link
-function returnEmote(name) {
-    if (emotes.length > 0) {
-        // coming soon
-    } else { log('emotes are still being processed'); }
-}
-let currentStreak = { streak: 0, emote: null }; // the current emote streak being used in chat
+let currentStreak = { streak: 1, emote: null, emoteURL: null }; // the current emote streak being used in chat
 let currentEmote; // the current emote being used in chat
 let showEmote; // the emote shown from using the !showemote <emote> command
-let minStreak = 5; // minimum emote streak to trigger overlay effects
+let minStreak = 2; // minimum emote streak to trigger overlay effects
 
-function findEmotes(message) {
+function findEmotes(message, messageFull) {
     if (emotes.length !== 0) {
-        message = message.split(' ');
-        if (message.includes(currentStreak.emote)) { currentStreak.streak++; }
-        else {
-            currentStreak.streak = 0;
-            currentStreak.emote = findEmoteInMessage(message);
+        let emoteUsedPos = (messageFull[4].startsWith('emotes=')) ? 4 : 5;
+        let emoteUsed = messageFull[emoteUsedPos].split('emotes=').pop();
+        messageSplit = message.split(' ');
+        if (messageSplit.includes(currentStreak.emote)) { currentStreak.streak++; } // add to emote streak
+        else if (messageFull[emoteUsedPos].startsWith('emotes=') && emoteUsed.length > 1) { // default twitch emotes
+            currentStreak.streak = 1;
+            currentStreak.emote = message.substring(parseInt(emoteUsed.split(':')[1].split('-')[0]), parseInt(emoteUsed.split(':')[1].split('-')[1]) + 1);
+            currentStreak.emoteURL = `https://static-cdn.jtvnw.net/emoticons/v1/${emoteUsed.split(':')[0]}/1.0`;
+        }
+        else { // find bttv/ffz emotes
+            currentStreak.streak = 1;
+            currentStreak.emote = findEmoteInMessage(messageSplit);
+            currentStreak.emoteURL = findEmoteURLInEmotes(currentStreak.emote);
         }
 
         function findEmoteInMessage(message) {
@@ -102,14 +81,26 @@ function findEmotes(message) {
             }
             return null;
         }
-        // add something to trigger streakEvent()
+        function findEmoteURLInEmotes(emote) {
+            for (const emoteObj of emotes) {
+                if (emoteObj.emoteName == emote) { return emoteObj.emoteURL; }
+            }
+            return null;
+        }
+        streakEvent();
     }
 }
 
-function streakEvent() {
+function streakEvent() { // edit the css now, to make it look good
     if (currentStreak.streak >= minStreak) {
-        // find a way to trigger animations
+        $('body').empty();
+        $('body').css("visibility","visible");
+        var img = $('<img />', {src : currentStreak.emoteURL });
+        img.appendTo('body');
+        var streakLength = $('body').append(' x' + currentStreak.streak + ' streak!');
+        streakLength.appendTo('body');
     }
+    if (currentStreak.streak < minStreak) { log('streak changed, now hiding..'); $('body').css("visibility","hidden"); }
 }
 
 // Connecting to twitch chat
@@ -138,12 +129,12 @@ function connect() {
 
     chat.onmessage = function(event) {
         let messageFull = event.data.split(/\r\n/)[0].split(`;`);
-        // log(messageFull)
+        log(messageFull)
         if (messageFull.length > 12) {
             let messageBefore = messageFull[messageFull.length - 1].split(`${channel} :`).pop(); // gets the raw message
             let message = (messageBefore.split(' ').includes('ACTION')) ? messageBefore.split('ACTION ').pop().split('')[0] : messageBefore; // checks for the /me ACTION usage and gets the specific message
             // log(message)
-            findEmotes(message)
+            findEmotes(message, messageFull)
         }
     };
 }
