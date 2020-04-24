@@ -91,16 +91,16 @@ function findEmotes(message, messageFull) {
     }
 }
 
-function streakEvent() { // edit the css now, to make it look good
+function streakEvent() {
     if (currentStreak.streak >= minStreak) {
-        $('body').empty();
-        $('body').css("visibility","visible");
+        $('#main').empty();
+        $('#main').css("visibility","visible");
         var img = $('<img />', {src : currentStreak.emoteURL });
-        img.appendTo('body');
-        var streakLength = $('body').append(' x' + currentStreak.streak + ' streak!');
-        streakLength.appendTo('body');
+        img.appendTo('#main');
+        var streakLength = $('#main').append(' x' + currentStreak.streak + ' streak!');
+        streakLength.appendTo('#main');
     }
-    if (currentStreak.streak < minStreak) { log('streak changed, now hiding..'); $('body').css("visibility","hidden"); }
+    if (currentStreak.streak < minStreak) { log('streak changed, now hiding..'); $('#main').css("visibility","hidden"); }
 }
 
 // Connecting to twitch chat
