@@ -19,6 +19,7 @@ let emotes = [];
 
 async function getEmotes(check) {
     const proxyurl = 'https://cors-anywhere.herokuapp.com/';
+
     // get FFZ emotes
     let res = await fetch('https://api.frankerfacez.com/v1/room/' + channel, {
         method: "GET"
@@ -27,12 +28,32 @@ async function getEmotes(check) {
     );
     if (!res.error) {
         let setName = Object.keys(res.sets);
-        for (var i = 0; i < res.sets[setName[0]].emoticons.length; i++) {
-            let emote = {
-                emoteName: res.sets[setName[0]].emoticons[i].name,
-                emoteURL: 'https://' + res.sets[setName[0]].emoticons[i].urls['1'].split('//').pop()
+        for (var k = 0; k < setName.length; k++) {
+            for (var i = 0; i < res.sets[setName[k]].emoticons.length; i++) {
+                let emote = {
+                    emoteName: res.sets[setName[k]].emoticons[i].name,
+                    emoteURL: 'https://' + res.sets[setName[k]].emoticons[i].urls['1'].split('//').pop()
+                }
+                emotes.push(emote);
             }
-            emotes.push(emote);
+        }
+    } else { log('Error getting twitch ffz emotes'); }
+    // get all global ffz emotes
+    res = await fetch('https://api.frankerfacez.com/v1/set/global', {
+        method: "GET"
+        }).then(function(response) { return response.json() },
+        function(error) { log(error.message); }
+    );
+    if (!res.error) {
+        let setName = Object.keys(res.sets);
+        for (var k = 0; k < setName.length; k++) {
+            for (var i = 0; i < res.sets[setName[k]].emoticons.length; i++) {
+                let emote = {
+                    emoteName: res.sets[setName[k]].emoticons[i].name,
+                    emoteURL: 'https://' + res.sets[setName[k]].emoticons[i].urls['1'].split('//').pop()
+                }
+                emotes.push(emote);
+            }
         }
     } else { log('Error getting twitch ffz emotes'); }
     // get all BTTV emotes
@@ -46,6 +67,22 @@ async function getEmotes(check) {
             let emote = {
                 emoteName: res.emotes[i].code,
                 emoteURL: `https://cdn.betterttv.net/emote/${res.emotes[i].id}/1x`
+            }
+            emotes.push(emote);
+        }
+        log(emotes);
+    } else { log('Error getting twitch bttv emotes'); }
+    // global bttv emotes
+    res = await fetch('https://api.betterttv.net/3/cached/emotes/global', {
+        method: "GET"
+        }).then(function(response) { return response.json() },
+        function(error) { log(error.message); }
+    );
+    if (!res.message) {
+        for (var i = 0; i < res.length; i++) {
+            let emote = {
+                emoteName: res[i].code,
+                emoteURL: `https://cdn.betterttv.net/emote/${res[i].id}/1x`
             }
             emotes.push(emote);
         }
