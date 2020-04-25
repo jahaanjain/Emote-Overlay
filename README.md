@@ -7,3 +7,6 @@ This project took direct inspiration from pajlada's pajbot, although I believe m
   
 Live version:  
 https://api.roaringiron.com/emoteoverlay?channel=(CHANNEL_NAME)&minStreak=(MINIMUM_EMOTE_STREAK_TO_SHOW_IN_OVERLAY)
+  
+Example:  
+https://api.roaringiron.com/emoteoverlay?channel=forsen&minStreak=5  
