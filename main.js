@@ -92,7 +92,8 @@ async function getEmotes(check) {
 
 let currentStreak = { streak: 1, emote: null, emoteURL: null }; // the current emote streak being used in chat
 let currentEmote; // the current emote being used in chat
-let showEmote; // the emote shown from using the !showemote <emote> command
+let showEmoteCooldown = new Date(); // the emote shown from using the !showemote <emote> command
+let showEmotePos = 1;
 let minStreak = 2; // minimum emote streak to trigger overlay effects
 
 function findEmotes(message, messageFull) {
@@ -140,6 +141,53 @@ function streakEvent() {
     if (currentStreak.streak < minStreak) { log('streak changed, now hiding..'); $('#main').css("visibility","hidden"); }
 }
 
+function showEmote(message, messageFull) {
+    if (emotes.length !== 0) {
+        let emoteUsedPos = (messageFull[4].startsWith('emotes=')) ? 4 : 5;
+        let emoteUsedID = messageFull[emoteUsedPos].split('emotes=').pop();
+        messageSplit = message.split(' ');
+        if (emoteUsedID.length == 0) {
+            let emoteUsed = findEmoteInMessage(messageSplit);
+            let emoteLink = findEmoteURLInEmotes(emoteUsed);
+            if (emoteLink) { return showEmoteEvent({ emoteName: emoteUsed, emoteURL: emoteLink }); }
+        }
+        else {
+            let emoteUsed = message.substring(parseInt(emoteUsedID.split(':')[1].split('-')[0]), parseInt(emoteUsedID.split(':')[1].split('-')[1]) + 1);
+            let emoteLink = `https://static-cdn.jtvnw.net/emoticons/v1/${emoteUsedID.split(':')[0]}/1.0`;
+            return showEmoteEvent({ emoteName: emoteUsed, emoteURL: emoteLink });
+        }
+        function findEmoteInMessage(message) {
+            for (const emote of emotes.map(a => a.emoteName)) {
+                if (message.includes(emote)) { return emote; }
+            }
+            return null;
+        }
+        function findEmoteURLInEmotes(emote) {
+            for (const emoteObj of emotes) {
+                if (emoteObj.emoteName == emote) { return emoteObj.emoteURL; }
+            }
+            return null;
+        }
+    }
+}
+
+function showEmoteEvent(emote) {
+    const cooldownTime = 10; // seconds
+    let secondsDiff = (new Date().getTime() - new Date(showEmoteCooldown).getTime()) / 1000;
+    log(secondsDiff)
+    if (secondsDiff > cooldownTime) {
+        showEmoteCooldown = new Date();
+        $(`#showEmote${showEmotePos}`).empty();
+        showEmotePos = Math.floor(Math.random() * 11);
+        $(`#showEmote${showEmotePos}`).css("visibility","visible");
+        var img = $('<img />', { src : emote.emoteURL });
+        img.appendTo(`#showEmote${showEmotePos}`);
+        setTimeout(() => {
+            $('#showEmote').empty();
+        }, 4 * 1000);
+    }
+}
+
 // Connecting to twitch chat
 function connect() {
 
@@ -170,7 +218,7 @@ function connect() {
         if (messageFull.length > 12) {
             let messageBefore = messageFull[messageFull.length - 1].split(`${channel} :`).pop(); // gets the raw message
             let message = (messageBefore.split(' ').includes('ACTION')) ? messageBefore.split('ACTION ').pop().split('')[0] : messageBefore; // checks for the /me ACTION usage and gets the specific message
-            // log(message)
+            if (message.toLowerCase().startsWith('!showemote')) { showEmote(message, messageFull); }
             findEmotes(message, messageFull)
         }
     };
