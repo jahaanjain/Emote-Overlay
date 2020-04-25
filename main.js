@@ -93,7 +93,7 @@ async function getEmotes(check) {
 let currentStreak = { streak: 1, emote: null, emoteURL: null }; // the current emote streak being used in chat
 let currentEmote; // the current emote being used in chat
 let showEmoteCooldown = new Date(); // the emote shown from using the !showemote <emote> command
-let minStreak = getUrlParam('minStreak', 5);; // minimum emote streak to trigger overlay effects
+let minStreak = (getUrlParam('minStreak', 5) > 1) ? getUrlParam('minStreak', 5) : 5; // minimum emote streak to trigger overlay effects
 
 function findEmotes(message, messageFull) {
     if (emotes.length !== 0) {
@@ -131,13 +131,13 @@ function findEmotes(message, messageFull) {
 function streakEvent() {
     if (currentStreak.streak >= minStreak) {
         $('#main').empty();
-        $('#main').css("visibility","visible");
         $('#main').css("position","absolute");
         $('#main').css("top","650");
         var img = $('<img />', {src : currentStreak.emoteURL });
         img.appendTo('#main');
         var streakLength = $('#main').append(' x' + currentStreak.streak + ' streak!');
         streakLength.appendTo('#main');
+        $('#main').css("visibility","visible");
     }
     if (currentStreak.streak < minStreak) { log('streak changed, now hiding..'); $('#main').css("visibility","hidden"); }
 }
