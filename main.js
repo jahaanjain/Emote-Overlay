@@ -1,4 +1,4 @@
-let debug = false;
+let debug = true;
 function log(message) { if (debug) { console.log(message); } }
 
 // Get URL Parameters (Credit to html-online.com)
@@ -94,6 +94,7 @@ let currentStreak = { streak: 1, emote: null, emoteURL: null }; // the current e
 let currentEmote; // the current emote being used in chat
 let showEmoteCooldown = new Date(); // the emote shown from using the !showemote <emote> command
 let minStreak = (getUrlParam('minStreak', 5) > 1) ? getUrlParam('minStreak', 5) : 5; // minimum emote streak to trigger overlay effects
+let streakCD; // remove streak from overlay if it hasnt changed in a while
 
 function findEmotes(message, messageFull) {
     if (emotes.length !== 0) {
@@ -138,6 +139,19 @@ function streakEvent() {
         var streakLength = $('#main').append(' x' + currentStreak.streak + ' streak!');
         streakLength.appendTo('#main');
         $('#main').css("visibility","visible");
+        gsap.to("#main", 0.15, { scaleX: 1.2, scaleY: 1.2, onComplete: downscale });
+        function downscale() {
+            gsap.to("#main", 0.15, { scaleX: 1, scaleY: 1 });
+        }
+        streakCD = $('#main').html();
+        setTimeout(() => {
+            if (streakCD === $('#main').html()) {
+                gsap.to("#main", 0.2, { scaleX: 0, scaleY: 0, onComplete: vanish });
+            }
+            function vanish() {
+                log('forcing streak hide'); $('#main').css("visibility","hidden");
+            }
+        }, 5 * 1000);
     }
     if (currentStreak.streak < minStreak) { log('streak changed, now hiding..'); $('#main').css("visibility","hidden"); }
 }
