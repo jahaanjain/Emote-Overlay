@@ -1,4 +1,4 @@
-let debug = true;
+let debug = false;
 function log(message) { if (debug) { console.log(message); } }
 
 // Get URL Parameters (Credit to html-online.com)
