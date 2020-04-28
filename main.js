@@ -18,7 +18,8 @@ log(channel);
 let emotes = [];
 
 async function getEmotes(check) {
-    const proxyurl = 'https://cors-anywhere.herokuapp.com/';
+    // const proxyurl = 'https://cors-anywhere.herokuapp.com/';
+    const proxyurl = 'https://tpbcors.herokuapp.com/';
 
     // get FFZ emotes
     let res = await fetch('https://api.frankerfacez.com/v1/room/' + channel, {
@@ -94,6 +95,10 @@ let currentStreak = { streak: 1, emote: null, emoteURL: null }; // the current e
 let currentEmote; // the current emote being used in chat
 let showEmoteCooldown = new Date(); // the emote shown from using the !showemote <emote> command
 let minStreak = (getUrlParam('minStreak', 5) > 4) ? getUrlParam('minStreak', 5) : 5; // minimum emote streak to trigger overlay effects
+let streakEnabled = getUrlParam('streakEnabled', 1); // allows user to enable/disable the streak module
+let showEmoteEnabled = getUrlParam('showEmoteEnabled', 1); // allows user to enable/disable the showEmote module
+log(`The streak module is ${streakEnabled} and the showEmote module is ${showEmoteEnabled}`);
+let streakCD = new Date().getTime();
 
 function findEmotes(message, messageFull) {
     if (emotes.length !== 0) {
@@ -129,25 +134,30 @@ function findEmotes(message, messageFull) {
 }
 
 function streakEvent() {
-    if (currentStreak.streak >= minStreak) {
+    if (currentStreak.streak >= minStreak && streakEnabled == 1) {
         $('#main').empty();
         $('#main').css("position","absolute");
         $('#main').css("top","650");
-        var img = $('<img />', {src : currentStreak.emoteURL });
+        $('#main').css("left","40");
+        var img = $('<img />', { src: currentStreak.emoteURL, style: 'transform: scale(1.5, 1.5)' });
         img.appendTo('#main');
-        var streakLength = $('#main').append(' x' + currentStreak.streak + ' streak!');
+        var streakLength = $('#main').append(' 󠀀  󠀀  x' + currentStreak.streak + ' streak!');
         streakLength.appendTo('#main');
         gsap.to("#main", 0.15, { scaleX: 1.2, scaleY: 1.2, onComplete: downscale });
         function downscale() { gsap.to("#main", 0.15, { scaleX: 1, scaleY: 1 }); }
-    }
-    if (currentStreak.streak < minStreak && currentStreak.streak > 3) {
-        log('streak changed, now hiding..');
-        gsap.to("#main", 0.2, { scaleX: 0, scaleY: 0, delay: 2 });
+        streakCD = new Date().getTime();
+        setInterval(() => {
+            if ((new Date().getTime() - streakCD) / 1000 > 4) {
+                streakCD = new Date().getTime();
+                gsap.to("#main", 0.2, { scaleX: 0, scaleY: 0, delay: 0.5, onComplete: remove });
+                function remove() { streakCD = new Date().getTime(); }
+            }
+        }, 1 * 1000);
     }
 }
 
 function showEmote(message, messageFull) {
-    if (emotes.length !== 0) {
+    if (emotes.length !== 0 && showEmoteEnabled == 1) {
         let emoteUsedPos = (messageFull[4].startsWith('emotes=')) ? 4 : 5;
         let emoteUsedID = messageFull[emoteUsedPos].split('emotes=').pop();
         messageSplit = message.split(' ');
@@ -184,39 +194,30 @@ function showEmoteEvent(emote) {
         showEmoteCooldown = new Date();
         var canvas = document.querySelector('#mars');
         var image = emote.emoteURL;
-        function getMeta(url, callback) {
-            var img = new Image();
-            img.src = url;
-            img.onload = function() { callback(this.width, this.height); }
+        var max_height = 720;
+        var max_width = 1280;
+        function getRandomCoords() {
+            var r = [];
+            var x = Math.floor(Math.random() * max_width);
+            var y = Math.floor(Math.random() * max_height);
+        
+            r = [x, y];
+            return r;
+        };
+        function createImage() {
+            $('#showEmote').empty();
+            var xy = getRandomCoords();
+            $('#showEmote').css("position","absolute");
+            $('#showEmote').css("top", xy[1] + 'px');
+            $('#showEmote').css("left", xy[0] + 'px');
+            log('creating showEmote')
+            var img = $('<img />', { src: image, style: 'transform: scale(2, 2)' });
+            img.appendTo('#showEmote');
+            gsap.to('#showEmote', 1, { autoAlpha: 1, onComplete: anim2 });
+            function anim2() { gsap.to('#showEmote', 1, { autoAlpha: 0, delay: 4, onComplete: remove }); }
+            function remove() { $('#showEmote').empty(); }
         }
-        getMeta(image, function(width, height) {
-            var max_height = 720;
-            var max_width = 1280;
-            function getRandomCoords() {
-                var r = [];
-                var x = Math.floor(Math.random() * max_width);
-                var y = Math.floor(Math.random() * max_height);
-            
-                r = [x, y];
-                return r;
-            };
-            function createImage() {
-                log(1)
-                var node = document.createElement('img');
-                var xy = getRandomCoords();
-            
-                node.id = "showEmote";
-                node.style.position = 'absolute';
-                node.style.top = xy[1] + 'px';
-                node.style.left = xy[0] + 'px';
-                node.setAttribute('src', image);
-                canvas.appendChild(node);
-                setTimeout(() => {
-                    $('#mars').empty();
-                }, 4 * 1000);
-            }
-            createImage();
-        });
+        createImage();
     }
 }
 
