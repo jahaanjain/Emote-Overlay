@@ -20,9 +20,20 @@ let emotes = [];
 async function getEmotes(check) {
     // const proxyurl = 'https://cors-anywhere.herokuapp.com/';
     const proxyurl = 'https://tpbcors.herokuapp.com/';
+    let twitchID;
+
+    // get channel twitch ID
+    let res = await fetch(proxyurl + 'https://api.ivr.fi/twitch/resolve/' + channel, {
+        method: "GET", headers: { "User-Agent": "api.roaringiron.com/emoteoverlay" }
+        }).then(function(response) { return response.json() },
+        function(error) { log(error.message); }
+    );
+    if (!res.error || res.status == 200) {
+        twitchID = res.id;
+    } else { console.log('Error getting twitch ID'); }
 
     // get FFZ emotes
-    let res = await fetch('https://api.frankerfacez.com/v1/room/' + channel, {
+    res = await fetch(proxyurl + 'https://api.frankerfacez.com/v1/room/' + channel, {
         method: "GET"
         }).then(function(response) { return response.json() },
         function(error) { log(error.message); }
@@ -38,9 +49,9 @@ async function getEmotes(check) {
                 emotes.push(emote);
             }
         }
-    } else { log('Error getting twitch ffz emotes'); }
+    } else { console.log('Error getting twitch ffz emotes'); }
     // get all global ffz emotes
-    res = await fetch('https://api.frankerfacez.com/v1/set/global', {
+    res = await fetch(proxyurl + 'https://api.frankerfacez.com/v1/set/global', {
         method: "GET"
         }).then(function(response) { return response.json() },
         function(error) { log(error.message); }
@@ -56,25 +67,32 @@ async function getEmotes(check) {
                 emotes.push(emote);
             }
         }
-    } else { log('Error getting twitch ffz emotes'); }
+    } else { console.log('Error getting twitch ffz emotes'); }
     // get all BTTV emotes
-    res = await fetch('https://api.betterttv.net/2/channels/' + channel, {
+    res = await fetch(proxyurl + 'https://api.betterttv.net/3/cached/users/twitch/' + twitchID, {
         method: "GET"
         }).then(function(response) { return response.json() },
         function(error) { log(error.message); }
     );
     if (!res.message) {
-        for (var i = 0; i < res.emotes.length; i++) {
+        for (var i = 0; i < res.channelEmotes.length; i++) {
             let emote = {
-                emoteName: res.emotes[i].code,
-                emoteURL: `https://cdn.betterttv.net/emote/${res.emotes[i].id}/1x`
+                emoteName: res.channelEmotes[i].code,
+                emoteURL: `https://cdn.betterttv.net/emote/${res.channelEmotes[i].id}/1x`
+            }
+            emotes.push(emote);
+        }
+        for (var i = 0; i < res.sharedEmotes.length; i++) {
+            let emote = {
+                emoteName: res.sharedEmotes[i].code,
+                emoteURL: `https://cdn.betterttv.net/emote/${res.sharedEmotes[i].id}/1x`
             }
             emotes.push(emote);
         }
         log(emotes);
-    } else { log('Error getting twitch bttv emotes'); }
+    } else { console.log('Error getting twitch bttv emotes'); }
     // global bttv emotes
-    res = await fetch('https://api.betterttv.net/3/cached/emotes/global', {
+    res = await fetch(proxyurl + 'https://api.betterttv.net/3/cached/emotes/global', {
         method: "GET"
         }).then(function(response) { return response.json() },
         function(error) { log(error.message); }
@@ -88,7 +106,7 @@ async function getEmotes(check) {
             emotes.push(emote);
         }
         log(emotes);
-    } else { log('Error getting twitch bttv emotes'); }
+    } else { console.log('Error getting twitch bttv emotes'); }
 }
 
 let currentStreak = { streak: 1, emote: null, emoteURL: null }; // the current emote streak being used in chat
