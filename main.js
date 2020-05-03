@@ -13,7 +13,7 @@ function getUrlParam(parameter, defaultvalue){
     return urlparameter;
 }
 
-let channel = getUrlParam('channel','abc123');
+let channel = getUrlParam('channel','abc123').toLowerCase();
 log(channel);
 let emotes = [];
 
