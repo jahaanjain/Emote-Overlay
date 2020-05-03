@@ -231,7 +231,7 @@ function showEmoteEvent(emote) {
             log('creating showEmote')
             var img = $('<img />', { src: image, style: 'transform: scale(2, 2)' });
             img.appendTo('#showEmote');
-            gsap.to('#showEmote', 1, { autoAlpha: 1, onComplete: anim2 });
+            gsap.to('#showEmote', 1, { scaleX: 1.2, scaleY: 1.2, autoAlpha: 1, onComplete: anim2 });
             function anim2() { gsap.to('#showEmote', 1, { autoAlpha: 0, delay: 4, onComplete: remove }); }
             function remove() { $('#showEmote').empty(); }
         }
