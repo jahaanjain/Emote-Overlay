@@ -1,8 +1,6 @@
 #world {
-    color: #333333;
-    background: #FFFFFF;
-    text-shadow: 2px 2px 0px #FFFFFF, 5px 4px 0px rgba(0,0,0,0.15);
-    color: #333333;
-    background: #FFFFFF;
-    font-size: 25px;
+  color: #ffffff;
+  font-size: 25px;
+  font-family: "Comic Sans MS", cursive, sans-serif;
+  text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000;
 }
