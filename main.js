@@ -26,39 +26,33 @@ log(channel);
 let emotes = [];
 
 async function getEmotes(check) {
+  function returnResponse(response) {
+    return response.json();
+  }
+  function logError(error) {
+    log(error.message);
+  }
+
   // const proxyurl = 'https://cors-anywhere.herokuapp.com/';
   const proxyurl = "https://tpbcors.herokuapp.com/";
   let twitchID;
+  let totalErrors = [];
 
   // get channel twitch ID
   let res = await fetch(proxyurl + "https://api.ivr.fi/twitch/resolve/" + channel, {
     method: "GET",
     headers: { "User-Agent": "api.roaringiron.com/emoteoverlay" },
-  }).then(
-    function (response) {
-      return response.json();
-    },
-    function (error) {
-      log(error.message);
-    }
-  );
+  }).then(returnResponse, logError);
   if (!res.error || res.status == 200) {
     twitchID = res.id;
   } else {
-    console.log("Error getting twitch ID");
+    totalErrors.push("Error getting twitch ID");
   }
 
   // get FFZ emotes
   res = await fetch(proxyurl + "https://api.frankerfacez.com/v1/room/" + channel, {
     method: "GET",
-  }).then(
-    function (response) {
-      return response.json();
-    },
-    function (error) {
-      log(error.message);
-    }
-  );
+  }).then(returnResponse, logError);
   if (!res.error) {
     let setName = Object.keys(res.sets);
     for (var k = 0; k < setName.length; k++) {
@@ -71,19 +65,12 @@ async function getEmotes(check) {
       }
     }
   } else {
-    console.log("Error getting twitch ffz emotes");
+    totalErrors.push("Error getting ffz emotes");
   }
   // get all global ffz emotes
   res = await fetch(proxyurl + "https://api.frankerfacez.com/v1/set/global", {
     method: "GET",
-  }).then(
-    function (response) {
-      return response.json();
-    },
-    function (error) {
-      log(error.message);
-    }
-  );
+  }).then(returnResponse, logError);
   if (!res.error) {
     let setName = Object.keys(res.sets);
     for (var k = 0; k < setName.length; k++) {
@@ -96,19 +83,12 @@ async function getEmotes(check) {
       }
     }
   } else {
-    console.log("Error getting twitch ffz emotes");
+    totalErrors.push("Error getting global ffz emotes");
   }
   // get all BTTV emotes
   res = await fetch(proxyurl + "https://api.betterttv.net/3/cached/users/twitch/" + twitchID, {
     method: "GET",
-  }).then(
-    function (response) {
-      return response.json();
-    },
-    function (error) {
-      log(error.message);
-    }
-  );
+  }).then(returnResponse, logError);
   if (!res.message) {
     for (var i = 0; i < res.channelEmotes.length; i++) {
       let emote = {
@@ -126,19 +106,12 @@ async function getEmotes(check) {
     }
     log(emotes);
   } else {
-    console.log("Error getting twitch bttv emotes");
+    totalErrors.push("Error getting bttv emotes");
   }
   // global bttv emotes
   res = await fetch(proxyurl + "https://api.betterttv.net/3/cached/emotes/global", {
     method: "GET",
-  }).then(
-    function (response) {
-      return response.json();
-    },
-    function (error) {
-      log(error.message);
-    }
-  );
+  }).then(returnResponse, logError);
   if (!res.message) {
     for (var i = 0; i < res.length; i++) {
       let emote = {
@@ -149,7 +122,36 @@ async function getEmotes(check) {
     }
     log(emotes);
   } else {
-    console.log("Error getting twitch bttv emotes");
+    totalErrors.push("Error getting global bttv emotes");
+  }
+  if (sevenTVEnabled == 1) {
+    // get all 7TV emotes
+    res = await fetch(proxyurl + `https://api.7tv.app/v2/users/${channel}/emotes`, {
+      method: "GET",
+    }).then(returnResponse, logError);
+    if (!res.error || res.status == 200) {
+      if (res.Status === 404) {
+        totalErrors.push("Error getting 7tv emotes");
+      } else {
+        for (var i = 0; i < res.length; i++) {
+          let emote = {
+            emoteName: res[i].name,
+            emoteURL: res[i].urls[0][1],
+          };
+          emotes.push(emote);
+        }
+      }
+    } else {
+      totalErrors.push("Error getting 7tv emotes");
+    }
+  }
+  if (totalErrors.length > 0) {
+    totalErrors.forEach((error) => {
+      console.error(error);
+    });
+    $("#errors").html(totalErrors.join("<br />")).delay(5000).fadeOut(300);
+  } else {
+    $("#errors").html(`Successfully loaded ${emotes.length} emotes.`).delay(2000).fadeOut(300);
   }
 }
 
@@ -160,6 +162,7 @@ let minStreak = getUrlParam("minStreak", 5) > 4 ? getUrlParam("minStreak", 5) : 
 let streakEnabled = getUrlParam("streakEnabled", 1); // allows user to enable/disable the streak module
 let showEmoteEnabled = getUrlParam("showEmoteEnabled", 1); // allows user to enable/disable the showEmote module
 let showEmoteSizeMultiplier = getUrlParam("showEmoteSizeMultiplier", 2); // allows user to change the showEmote emote size multipler
+let sevenTVEnabled = getUrlParam("7tv", 0); // enables or disables support for 7tv.app emotes (only loads in channel emotes, not global)
 log(`The streak module is ${streakEnabled} and the showEmote module is ${showEmoteEnabled}`);
 let streakCD = new Date().getTime();
 
