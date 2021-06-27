@@ -26,10 +26,10 @@ https://api.roaringiron.com/emoteoverlay?channel=forsen
 # Available Parameters:
 
 To use these parameters, add them after the url with this format: "&(parameter)=(value)"
-For example, if I wanted to add the "minStreak" parameter, my new URL would be "https://api.roaringiron.com/emoteoverlay?channel=forsen&minStreak=10&showEmoteSizeMultiplier=3"
+For example, if I wanted to add the "minStreak" and the "7tv" parameter, my new URL would be "https://api.roaringiron.com/emoteoverlay?channel=forsen&minStreak=10&7tv=1"
 
 - channel=(channel name) **_REQUIRED_**
-- minStreak=(minimum emote streak needed to show up in overlay) _OPTIONAL - Defaults to 5 - Minimum value is 5_
+- minStreak=(minimum emote streak needed to show up in overlay) _OPTIONAL - Defaults to 5 - Minimum value allowed is 3_
 - showEmoteEnabled=(1 for enabled, 0 for disabled) _OPTIONAL - Defaults to 1 (enabled)_
 - streakEnabled=(1 for enabled, 0 for disabled) _OPTIONAL - Defaults to 1 (enabled)_
 - showEmoteSizeMultiplier=(changes the size of the show emotes by the number provided) _OPTIONAL - Defaults to 2_

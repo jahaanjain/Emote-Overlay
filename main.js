@@ -158,7 +158,7 @@ async function getEmotes(check) {
 let currentStreak = { streak: 1, emote: null, emoteURL: null }; // the current emote streak being used in chat
 let currentEmote; // the current emote being used in chat
 let showEmoteCooldown = new Date(); // the emote shown from using the !showemote <emote> command
-let minStreak = getUrlParam("minStreak", 5) > 4 ? getUrlParam("minStreak", 5) : 5; // minimum emote streak to trigger overlay effects
+let minStreak = getUrlParam("minStreak", 5) > 2 ? getUrlParam("minStreak", 5) : 5; // minimum emote streak to trigger overlay effects (Minimum value allowed is 3)
 let streakEnabled = getUrlParam("streakEnabled", 1); // allows user to enable/disable the streak module
 let showEmoteEnabled = getUrlParam("showEmoteEnabled", 1); // allows user to enable/disable the showEmote module
 let showEmoteSizeMultiplier = getUrlParam("showEmoteSizeMultiplier", 2); // allows user to change the showEmote emote size multipler
@@ -178,7 +178,7 @@ function findEmotes(message, messageFull) {
       // default twitch emotes
       currentStreak.streak = 1;
       currentStreak.emote = message.substring(parseInt(emoteUsed.split(":")[1].split("-")[0]), parseInt(emoteUsed.split(":")[1].split("-")[1]) + 1);
-      currentStreak.emoteURL = `https://static-cdn.jtvnw.net/emoticons/v1/${emoteUsed.split(":")[0]}/1.0`;
+      currentStreak.emoteURL = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteUsed.split(":")[0]}/default/dark/1.0`;
     } else {
       // find bttv/ffz emotes
       currentStreak.streak = 1;
