@@ -57,10 +57,9 @@ async function getEmotes(check) {
     let setName = Object.keys(res.sets);
     for (var k = 0; k < setName.length; k++) {
       for (var i = 0; i < res.sets[setName[k]].emoticons.length; i++) {
-        const emoteURL = res.sets[setName[k]].emoticons[i].urls["2"] ? res.sets[setName[k]].emoticons[i].urls["2"] : res.sets[setName[k]].emoticons[i].urls["1"];
         let emote = {
           emoteName: res.sets[setName[k]].emoticons[i].name,
-          emoteURL: "https://" + emoteURL.split("//").pop(),
+          emoteURL: "https://" + res.sets[setName[k]].emoticons[i].urls["1"].split("//").pop(),
         };
         emotes.push(emote);
       }
@@ -76,10 +75,9 @@ async function getEmotes(check) {
     let setName = Object.keys(res.sets);
     for (var k = 0; k < setName.length; k++) {
       for (var i = 0; i < res.sets[setName[k]].emoticons.length; i++) {
-        const emoteURL = res.sets[setName[k]].emoticons[i].urls["2"] ? res.sets[setName[k]].emoticons[i].urls["2"] : res.sets[setName[k]].emoticons[i].urls["1"];
         let emote = {
           emoteName: res.sets[setName[k]].emoticons[i].name,
-          emoteURL: "https://" + emoteURL.split("//").pop(),
+          emoteURL: "https://" + res.sets[setName[k]].emoticons[i].urls["1"].split("//").pop(),
         };
         emotes.push(emote);
       }
@@ -95,14 +93,14 @@ async function getEmotes(check) {
     for (var i = 0; i < res.channelEmotes.length; i++) {
       let emote = {
         emoteName: res.channelEmotes[i].code,
-        emoteURL: `https://cdn.betterttv.net/emote/${res.channelEmotes[i].id}/2x`,
+        emoteURL: `https://cdn.betterttv.net/emote/${res.channelEmotes[i].id}/1x`,
       };
       emotes.push(emote);
     }
     for (var i = 0; i < res.sharedEmotes.length; i++) {
       let emote = {
         emoteName: res.sharedEmotes[i].code,
-        emoteURL: `https://cdn.betterttv.net/emote/${res.sharedEmotes[i].id}/2x`,
+        emoteURL: `https://cdn.betterttv.net/emote/${res.sharedEmotes[i].id}/1x`,
       };
       emotes.push(emote);
     }
@@ -118,7 +116,7 @@ async function getEmotes(check) {
     for (var i = 0; i < res.length; i++) {
       let emote = {
         emoteName: res[i].code,
-        emoteURL: `https://cdn.betterttv.net/emote/${res[i].id}/2x`,
+        emoteURL: `https://cdn.betterttv.net/emote/${res[i].id}/1x`,
       };
       emotes.push(emote);
     }
@@ -138,7 +136,7 @@ async function getEmotes(check) {
         for (var i = 0; i < res.length; i++) {
           let emote = {
             emoteName: res[i].name,
-            emoteURL: res[i].urls[1][1],
+            emoteURL: res[i].urls[0][1],
           };
           emotes.push(emote);
         }
@@ -157,7 +155,7 @@ async function getEmotes(check) {
         for (var i = 0; i < res.length; i++) {
           let emote = {
             emoteName: res[i].name,
-            emoteURL: res[i].urls[1][1],
+            emoteURL: res[i].urls[0][1],
           };
           emotes.push(emote);
         }
@@ -199,7 +197,7 @@ function findEmotes(message, messageFull) {
       // default twitch emotes
       currentStreak.streak = 1;
       currentStreak.emote = message.substring(parseInt(emoteUsed.split(":")[1].split("-")[0]), parseInt(emoteUsed.split(":")[1].split("-")[1]) + 1);
-      currentStreak.emoteURL = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteUsed.split(":")[0]}/default/dark/2.0`;
+      currentStreak.emoteURL = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteUsed.split(":")[0]}/default/dark/1.0`;
     } else {
       // find bttv/ffz emotes
       currentStreak.streak = 1;
@@ -233,7 +231,7 @@ function streakEvent() {
     $("#main").css("position", "absolute");
     $("#main").css("top", "650");
     $("#main").css("left", "40");
-    var img = $("<img />", { src: currentStreak.emoteURL });
+    var img = $("<img />", { src: currentStreak.emoteURL, style: "transform: scale(1.5, 1.5)" });
     img.appendTo("#main");
     var streakLength = $("#main").append(" 󠀀  󠀀  x" + currentStreak.streak + " streak!");
     streakLength.appendTo("#main");
@@ -267,7 +265,7 @@ function showEmote(message, messageFull) {
       }
     } else {
       let emoteUsed = message.substring(parseInt(emoteUsedID.split(":")[1].split("-")[0]), parseInt(emoteUsedID.split(":")[1].split("-")[1]) + 1);
-      let emoteLink = `https://static-cdn.jtvnw.net/emoticons/v1/${emoteUsedID.split(":")[0]}/2.0`;
+      let emoteLink = `https://static-cdn.jtvnw.net/emoticons/v1/${emoteUsedID.split(":")[0]}/1.0`;
       return showEmoteEvent({ emoteName: emoteUsed, emoteURL: emoteLink });
     }
     function findEmoteInMessage(message) {
