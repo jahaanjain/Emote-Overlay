@@ -178,12 +178,13 @@ async function getEmotes(check) {
 
 let currentStreak = { streak: 1, emote: null, emoteURL: null }; // the current emote streak being used in chat
 let currentEmote; // the current emote being used in chat
-let showEmoteCooldown = new Date(); // the emote shown from using the !showemote <emote> command
+let showEmoteCooldownRef = new Date(); // the emote shown from using the !showemote <emote> command
 let minStreak = getUrlParam("minStreak", 5) > 2 ? getUrlParam("minStreak", 5) : 5; // minimum emote streak to trigger overlay effects (Minimum value allowed is 3)
 let streakEnabled = getUrlParam("streakEnabled", 1); // allows user to enable/disable the streak module
 let showEmoteEnabled = getUrlParam("showEmoteEnabled", 1); // allows user to enable/disable the showEmote module
-let showEmoteSizeMultiplier = getUrlParam("showEmoteSizeMultiplier", 2); // allows user to change the showEmote emote size multipler
+let showEmoteSizeMultiplier = getUrlParam("showEmoteSizeMultiplier", 1); // allows user to change the showEmote emote size multipler
 let sevenTVEnabled = getUrlParam("7tv", 0); // enables or disables support for 7tv.app emotes (only loads in channel emotes, not global)
+let showEmoteCooldown = getUrlParam("showEmoteCooldown", 6); // enables or disables support for 7tv.app emotes (only loads in channel emotes, not global)
 log(`The streak module is ${streakEnabled} and the showEmote module is ${showEmoteEnabled}`);
 let streakCD = new Date().getTime();
 
@@ -290,11 +291,10 @@ function showEmote(message, messageFull) {
 }
 
 function showEmoteEvent(emote) {
-    const cooldownTime = 5; // seconds
-    let secondsDiff = (new Date().getTime() - new Date(showEmoteCooldown).getTime()) / 1000;
+    let secondsDiff = (new Date().getTime() - new Date(showEmoteCooldownRef).getTime()) / 1000;
     log(secondsDiff);
-    if (secondsDiff > cooldownTime) {
-        showEmoteCooldown = new Date();
+    if (secondsDiff > parseInt(showEmoteCooldown)) {
+        showEmoteCooldownRef = new Date();
         var image = emote.emoteURL;
         var max_height = 720;
         var max_width = 1280;
