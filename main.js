@@ -190,7 +190,7 @@ let streakCD = new Date().getTime();
 
 function findEmotes(message, messageFull) {
     if (emotes.length !== 0) {
-        let emoteUsedPos = messageFull[4].startsWith("emotes=") ? 4 : 5;
+        let emoteUsedPos = messageFull[4].startsWith("emotes=") ? 4 : messageFull[5].startsWith("emote-only=") ? 6 : 5;
         let emoteUsed = messageFull[emoteUsedPos].split("emotes=").pop();
         messageSplit = message.split(" ");
         if (messageSplit.includes(currentStreak.emote)) {
