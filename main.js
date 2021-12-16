@@ -268,7 +268,7 @@ function showEmote(message, messageFull) {
             }
         } else {
             let emoteUsed = message.substring(parseInt(emoteUsedID.split(":")[1].split("-")[0]), parseInt(emoteUsedID.split(":")[1].split("-")[1]) + 1);
-            let emoteLink = `https://static-cdn.jtvnw.net/emoticons/v1/${emoteUsedID.split(":")[0]}/2.0`;
+            let emoteLink = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteUsedID.split(":")[0]}/default/dark/2.0`;
             return showEmoteEvent({ emoteName: emoteUsed, emoteURL: emoteLink });
         }
         function findEmoteInMessage(message) {
