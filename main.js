@@ -57,7 +57,9 @@ async function getEmotes(check) {
         let setName = Object.keys(res.sets);
         for (var k = 0; k < setName.length; k++) {
             for (var i = 0; i < res.sets[setName[k]].emoticons.length; i++) {
-                const emoteURL = res.sets[setName[k]].emoticons[i].urls["2"] ? res.sets[setName[k]].emoticons[i].urls["2"] : res.sets[setName[k]].emoticons[i].urls["1"];
+                const emoteURL = res.sets[setName[k]].emoticons[i].urls["2"]
+                    ? res.sets[setName[k]].emoticons[i].urls["2"]
+                    : res.sets[setName[k]].emoticons[i].urls["1"];
                 let emote = {
                     emoteName: res.sets[setName[k]].emoticons[i].name,
                     emoteURL: "https://" + emoteURL.split("//").pop(),
@@ -76,7 +78,9 @@ async function getEmotes(check) {
         let setName = Object.keys(res.sets);
         for (var k = 0; k < setName.length; k++) {
             for (var i = 0; i < res.sets[setName[k]].emoticons.length; i++) {
-                const emoteURL = res.sets[setName[k]].emoticons[i].urls["2"] ? res.sets[setName[k]].emoticons[i].urls["2"] : res.sets[setName[k]].emoticons[i].urls["1"];
+                const emoteURL = res.sets[setName[k]].emoticons[i].urls["2"]
+                    ? res.sets[setName[k]].emoticons[i].urls["2"]
+                    : res.sets[setName[k]].emoticons[i].urls["1"];
                 let emote = {
                     emoteName: res.sets[setName[k]].emoticons[i].name,
                     emoteURL: "https://" + emoteURL.split("//").pop(),
@@ -184,7 +188,8 @@ let streakEnabled = getUrlParam("streakEnabled", 1); // allows user to enable/di
 let showEmoteEnabled = getUrlParam("showEmoteEnabled", 1); // allows user to enable/disable the showEmote module
 let showEmoteSizeMultiplier = getUrlParam("showEmoteSizeMultiplier", 1); // allows user to change the showEmote emote size multipler
 let sevenTVEnabled = getUrlParam("7tv", 0); // enables or disables support for 7tv.app emotes (only loads in channel emotes, not global)
-let showEmoteCooldown = getUrlParam("showEmoteCooldown", 6); // enables or disables support for 7tv.app emotes (only loads in channel emotes, not global)
+let showEmoteCooldown = getUrlParam("showEmoteCooldown", 6); // sets the cooldown for the showEmote command (in seconds)
+let emoteStreakText = decodeURIComponent(getUrlParam("emoteStreakText", "streak!")); // sets the ending text for the emote streak overlay (set to empty string to disable)
 log(`The streak module is ${streakEnabled} and the showEmote module is ${showEmoteEnabled}`);
 let streakCD = new Date().getTime();
 
@@ -236,7 +241,7 @@ function streakEvent() {
         $("#main").css("left", "35");
         var img = $("<img />", { src: currentStreak.emoteURL });
         img.appendTo("#main");
-        var streakLength = $("#main").append(" 󠀀  󠀀  x" + currentStreak.streak + " streak!");
+        var streakLength = $("#main").append(" 󠀀  󠀀  x" + currentStreak.streak + " " + emoteStreakText);
         streakLength.appendTo("#main");
         gsap.to("#main", 0.15, { scaleX: 1.2, scaleY: 1.2, onComplete: downscale });
         function downscale() {
