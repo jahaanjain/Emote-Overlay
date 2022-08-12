@@ -1,374 +1,268 @@
-let debug = false;
-function log(message) {
-    if (debug) {
-        console.log(message);
-    }
-}
+const url = new URL(window.location.href);
 
-// Get URL Parameters (Credit to html-online.com)
-function getUrlVars() {
-    var vars = {};
-    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
-        vars[key] = value;
-    });
-    return vars;
-}
-function getUrlParam(parameter, defaultvalue) {
-    var urlparameter = defaultvalue;
-    if (window.location.href.indexOf(parameter) > -1) {
-        urlparameter = getUrlVars()[parameter];
-    }
-    return urlparameter;
-}
+const config = {
+  channel: url.searchParams.get("channel"),
+  currentStreak: { streak: 1, emote: "", url: "" },
+  streakEnabled: !!Number(url.searchParams.get("streakEnabled") || 1),
+  showEmoteEnabled: !!Number(url.searchParams.get("showEmoteEnabled") || 1),
+  sevenTVEnabled: !!Number(url.searchParams.get("7tv") || 0),
+  showEmoteCooldown: Number(url.searchParams.get("showEmoteCooldown") || 6),
+  showEmoteSizeMultiplier: Number(url.searchParams.get("showEmoteSizeMultiplier") || 1),
+  minStreak: Number(url.searchParams.get("minStreak") || 5),
+  emoteStreakEndingText: url.searchParams.get("emoteStreakText") ?? "streak!",
+  showEmoteCooldownRef: new Date(),
+  streakCooldown: new Date().getTime(),
+  emotes: [],
+};
 
-let channel = getUrlParam("channel", "abc123").toLowerCase();
-log(channel);
-let emotes = [];
+const getEmotes = async () => {
+  const proxy = "https://tpbcors.herokuapp.com/";
+  console.log(config);
 
-async function getEmotes(check) {
-    function returnResponse(response) {
-        return response.json();
-    }
-    function logError(error) {
-        log(error.message);
-    }
+  if (!config.channel)
+    return $("#errors").html(
+      `Invalid channel. Please enter a channel name in the URL. Example: https://api.roaringiron.com/emoteoverlay?channel=forsen`
+    );
 
-    // const proxyurl = 'https://cors-anywhere.herokuapp.com/';
-    const proxyurl = "https://tpbcors.herokuapp.com/";
-    let twitchID;
-    let totalErrors = [];
-
-    // get channel twitch ID
-    let res = await fetch(proxyurl + "https://api.ivr.fi/twitch/resolve/" + channel, {
-        method: "GET",
+  const twitchId = (
+    await (
+      await fetch(proxy + "https://api.ivr.fi/v2/twitch/user?login=" + config.channel, {
         headers: { "User-Agent": "api.roaringiron.com/emoteoverlay" },
-    }).then(returnResponse, logError);
-    if (!res.error || res.status == 200) {
-        twitchID = res.id;
-    } else {
-        totalErrors.push("Error getting twitch ID");
-    }
+      })
+    ).json()
+  )?.[0].id;
 
-    // get FFZ emotes
-    res = await fetch(proxyurl + "https://api.frankerfacez.com/v1/room/" + channel, {
-        method: "GET",
-    }).then(returnResponse, logError);
-    if (!res.error) {
-        let setName = Object.keys(res.sets);
-        for (var k = 0; k < setName.length; k++) {
-            for (var i = 0; i < res.sets[setName[k]].emoticons.length; i++) {
-                const emoteURL = res.sets[setName[k]].emoticons[i].urls["2"]
-                    ? res.sets[setName[k]].emoticons[i].urls["2"]
-                    : res.sets[setName[k]].emoticons[i].urls["1"];
-                let emote = {
-                    emoteName: res.sets[setName[k]].emoticons[i].name,
-                    emoteURL: "https://" + emoteURL.split("//").pop(),
-                };
-                emotes.push(emote);
-            }
-        }
-    } else {
-        totalErrors.push("Error getting ffz emotes");
-    }
-    // get all global ffz emotes
-    res = await fetch(proxyurl + "https://api.frankerfacez.com/v1/set/global", {
-        method: "GET",
-    }).then(returnResponse, logError);
-    if (!res.error) {
-        let setName = Object.keys(res.sets);
-        for (var k = 0; k < setName.length; k++) {
-            for (var i = 0; i < res.sets[setName[k]].emoticons.length; i++) {
-                const emoteURL = res.sets[setName[k]].emoticons[i].urls["2"]
-                    ? res.sets[setName[k]].emoticons[i].urls["2"]
-                    : res.sets[setName[k]].emoticons[i].urls["1"];
-                let emote = {
-                    emoteName: res.sets[setName[k]].emoticons[i].name,
-                    emoteURL: "https://" + emoteURL.split("//").pop(),
-                };
-                emotes.push(emote);
-            }
-        }
-    } else {
-        totalErrors.push("Error getting global ffz emotes");
-    }
-    // get all BTTV emotes
-    res = await fetch(proxyurl + "https://api.betterttv.net/3/cached/users/twitch/" + twitchID, {
-        method: "GET",
-    }).then(returnResponse, logError);
-    if (!res.message) {
-        for (var i = 0; i < res.channelEmotes.length; i++) {
-            let emote = {
-                emoteName: res.channelEmotes[i].code,
-                emoteURL: `https://cdn.betterttv.net/emote/${res.channelEmotes[i].id}/2x`,
-            };
-            emotes.push(emote);
-        }
-        for (var i = 0; i < res.sharedEmotes.length; i++) {
-            let emote = {
-                emoteName: res.sharedEmotes[i].code,
-                emoteURL: `https://cdn.betterttv.net/emote/${res.sharedEmotes[i].id}/2x`,
-            };
-            emotes.push(emote);
-        }
-        log(emotes);
-    } else {
-        totalErrors.push("Error getting bttv emotes");
-    }
-    // global bttv emotes
-    res = await fetch(proxyurl + "https://api.betterttv.net/3/cached/emotes/global", {
-        method: "GET",
-    }).then(returnResponse, logError);
-    if (!res.message) {
-        for (var i = 0; i < res.length; i++) {
-            let emote = {
-                emoteName: res[i].code,
-                emoteURL: `https://cdn.betterttv.net/emote/${res[i].id}/2x`,
-            };
-            emotes.push(emote);
-        }
-        log(emotes);
-    } else {
-        totalErrors.push("Error getting global bttv emotes");
-    }
-    if (sevenTVEnabled == 1) {
-        // get all 7TV emotes
-        res = await fetch(proxyurl + `https://api.7tv.app/v2/users/${channel}/emotes`, {
-            method: "GET",
-        }).then(returnResponse, logError);
-        if (!res.error || res.status == 200) {
-            if (res.Status === 404) {
-                totalErrors.push("Error getting 7tv emotes");
-            } else {
-                for (var i = 0; i < res.length; i++) {
-                    let emote = {
-                        emoteName: res[i].name,
-                        emoteURL: res[i].urls[1][1],
-                    };
-                    emotes.push(emote);
-                }
-            }
-        } else {
-            totalErrors.push("Error getting 7tv emotes");
-        }
-        // get all 7TV global emotes
-        res = await fetch(proxyurl + `https://api.7tv.app/v2/emotes/global`, {
-            method: "GET",
-        }).then(returnResponse, logError);
-        if (!res.error || res.status == 200) {
-            if (res.Status === 404) {
-                totalErrors.push("Error getting 7tv global emotes");
-            } else {
-                for (var i = 0; i < res.length; i++) {
-                    let emote = {
-                        emoteName: res[i].name,
-                        emoteURL: res[i].urls[1][1],
-                    };
-                    emotes.push(emote);
-                }
-            }
-        } else {
-            totalErrors.push("Error getting 7tv global emotes");
-        }
-    }
-    if (totalErrors.length > 0) {
-        totalErrors.forEach((error) => {
-            console.error(error);
+  await (await fetch(proxy + "https://api.frankerfacez.com/v1/room/" + config.channel)).json().then((data) => {
+    const emoteNames = Object.keys(data.sets);
+    for (let i = 0; i < emoteNames.length; i++) {
+      for (let j = 0; j < data.sets[emoteNames[i]].emoticons.length; j++) {
+        const emote = data.sets[emoteNames[i]].emoticons[j];
+        config.emotes.push({
+          name: emote.name,
+          url: "https://" + (emote.urls["2"] || emote.urls["1"]).split("//").pop(),
         });
-        $("#errors").html(totalErrors.join("<br />")).delay(5000).fadeOut(300);
+      }
+    }
+  });
+
+  await (await fetch(proxy + "https://api.frankerfacez.com/v1/set/global")).json().then((data) => {
+    const emoteNames = Object.keys(data.sets);
+    for (let i = 0; i < emoteNames.length; i++) {
+      for (let j = 0; j < data.sets[emoteNames[i]].emoticons.length; j++) {
+        const emote = data.sets[emoteNames[i]].emoticons[j];
+        config.emotes.push({
+          name: emote.name,
+          url: "https://" + (emote.urls["2"] || emote.urls["1"]).split("//").pop(),
+        });
+      }
+    }
+  });
+
+  await (await fetch(proxy + "https://api.betterttv.net/3/cached/users/twitch/" + twitchId)).json().then((data) => {
+    for (let i = 0; i < data.channelEmotes.length; i++) {
+      config.emotes.push({
+        name: data.channelEmotes[i].code,
+        url: `https://cdn.betterttv.net/emote/${data.channelEmotes[i].id}/2x`,
+      });
+    }
+    for (let i = 0; i < data.sharedEmotes.length; i++) {
+      config.emotes.push({
+        name: data.sharedEmotes[i].code,
+        url: `https://cdn.betterttv.net/emote/${data.sharedEmotes[i].id}/2x`,
+      });
+    }
+  });
+
+  await (await fetch(proxy + "https://api.betterttv.net/3/cached/emotes/global")).json().then((data) => {
+    for (let i = 0; i < data.length; i++) {
+      config.emotes.push({
+        name: data[i].code,
+        url: `https://cdn.betterttv.net/emote/${data[i].id}/2x`,
+      });
+    }
+  });
+
+  if (config.sevenTVEnabled) {
+    await (await fetch(proxy + `https://api.7tv.app/v2/users/${config.channel}/emotes`)).json().then((data) => {
+      for (let i = 0; i < data.length; i++) {
+        config.emotes.push({
+          name: data[i].name,
+          url: data[i].urls[1][1],
+        });
+      }
+    });
+
+    await (await fetch(proxy + "https://api.7tv.app/v2/emotes/global")).json().then((data) => {
+      for (let i = 0; i < data.length; i++) {
+        config.emotes.push({
+          name: data[i].name,
+          url: data[i].urls[1][1],
+        });
+      }
+    });
+  }
+
+  const successMessage = `Successfully loaded ${config.emotes.length} emotes for channel ${config.channel}`;
+
+  $("#errors").html(successMessage).delay(2000).fadeOut(300);
+  console.log(successMessage, config.emotes);
+};
+
+const findEmoteInMessage = (message) => {
+  for (const emote of config.emotes.map((a) => a.name)) {
+    if (message.includes(emote)) {
+      return emote;
+    }
+  }
+  return null;
+};
+
+const findUrlInEmotes = (emote) => {
+  for (const emoteObj of config.emotes) {
+    if (emoteObj.name === emote) {
+      return emoteObj.url;
+    }
+  }
+  return null;
+};
+
+const getRandomCoords = () => [Math.floor(Math.random() * 720), Math.floor(Math.random() * 1280)];
+
+const showEmote = (message, rawMessage) => {
+  if (config.showEmoteEnabled) {
+    const emoteUsedPos = rawMessage[4].startsWith("emotes=") ? 4 : 5;
+    const emoteUsed = rawMessage[emoteUsedPos].split("emotes=").pop();
+    const splitMessage = message.split(" ");
+
+    if (emoteUsed.length === 0) {
+      const url = findUrlInEmotes(findEmoteInMessage(splitMessage));
+      if (url) return showEmoteEvent(url);
     } else {
-        $("#errors").html(`Successfully loaded ${emotes.length} emotes.`).delay(2000).fadeOut(300);
+      const url = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteUsed.split(":")[0]}/default/dark/2.0`;
+      return showEmoteEvent(url);
     }
-}
+  }
+};
 
-let currentStreak = { streak: 1, emote: null, emoteURL: null }; // the current emote streak being used in chat
-let currentEmote; // the current emote being used in chat
-let showEmoteCooldownRef = new Date(); // the emote shown from using the !showemote <emote> command
-let minStreak = getUrlParam("minStreak", 5) > 2 ? getUrlParam("minStreak", 5) : 5; // minimum emote streak to trigger overlay effects (Minimum value allowed is 3)
-let streakEnabled = getUrlParam("streakEnabled", 1); // allows user to enable/disable the streak module
-let showEmoteEnabled = getUrlParam("showEmoteEnabled", 1); // allows user to enable/disable the showEmote module
-let showEmoteSizeMultiplier = getUrlParam("showEmoteSizeMultiplier", 1); // allows user to change the showEmote emote size multipler
-let sevenTVEnabled = getUrlParam("7tv", 0); // enables or disables support for 7tv.app emotes (only loads in channel emotes, not global)
-let showEmoteCooldown = getUrlParam("showEmoteCooldown", 6); // sets the cooldown for the showEmote command (in seconds)
-let emoteStreakText = decodeURIComponent(getUrlParam("emoteStreakText", "streak!")); // sets the ending text for the emote streak overlay (set to empty string to disable)
-log(`The streak module is ${streakEnabled} and the showEmote module is ${showEmoteEnabled}`);
-let streakCD = new Date().getTime();
+const findEmotes = (message, rawMessage) => {
+  if (config.emotes.length === 0) return;
 
-function findEmotes(message, messageFull) {
-    if (emotes.length !== 0) {
-        let emoteUsedPos = messageFull[4].startsWith("emotes=") ? 4 : messageFull[5].startsWith("emote-only=") ? 6 : 5;
-        let emoteUsed = messageFull[emoteUsedPos].split("emotes=").pop();
-        messageSplit = message.split(" ");
-        if (messageSplit.includes(currentStreak.emote)) {
-            currentStreak.streak++;
-        } // add to emote streak
-        else if (messageFull[emoteUsedPos].startsWith("emotes=") && emoteUsed.length > 1) {
-            // default twitch emotes
-            currentStreak.streak = 1;
-            currentStreak.emote = message.substring(parseInt(emoteUsed.split(":")[1].split("-")[0]), parseInt(emoteUsed.split(":")[1].split("-")[1]) + 1);
-            currentStreak.emoteURL = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteUsed.split(":")[0]}/default/dark/2.0`;
-        } else {
-            // find bttv/ffz emotes
-            currentStreak.streak = 1;
-            currentStreak.emote = findEmoteInMessage(messageSplit);
-            currentStreak.emoteURL = findEmoteURLInEmotes(currentStreak.emote);
-        }
+  const emoteUsedPos = rawMessage[4].startsWith("emotes=") ? 4 : rawMessage[5].startsWith("emote-only=") ? 6 : 5;
+  const emoteUsed = rawMessage[emoteUsedPos].split("emotes=").pop();
+  const splitMessage = message.split(" ").filter((a) => !!a.length);
 
-        function findEmoteInMessage(message) {
-            for (const emote of emotes.map((a) => a.emoteName)) {
-                if (message.includes(emote)) {
-                    return emote;
-                }
-            }
-            return null;
-        }
-        function findEmoteURLInEmotes(emote) {
-            for (const emoteObj of emotes) {
-                if (emoteObj.emoteName == emote) {
-                    return emoteObj.emoteURL;
-                }
-            }
-            return null;
-        }
-        streakEvent();
+  if (splitMessage.includes(config.currentStreak.emote)) config.currentStreak.streak++;
+  else if (rawMessage[emoteUsedPos].startsWith("emotes=") && emoteUsed.length > 1) {
+    config.currentStreak.streak = 1;
+    config.currentStreak.emote = message.substring(
+      parseInt(emoteUsed.split(":")[1].split("-")[0]),
+      parseInt(emoteUsed.split(":")[1].split("-")[1]) + 1
+    );
+    config.currentStreak.url = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteUsed.split(":")[0]}/default/dark/2.0`;
+  } else {
+    config.currentStreak.streak = 1;
+    config.currentStreak.emote = findEmoteInMessage(splitMessage);
+    config.currentStreak.url = findUrlInEmotes(config.currentStreak.emote);
+  }
+
+  streakEvent();
+};
+
+const streakEvent = () => {
+  if (config.currentStreak.streak >= config.minStreak && config.streakEnabled) {
+    $("#main").empty();
+    $("#main").css("position", "absolute");
+    $("#main").css("top", "600");
+    $("#main").css("left", "35");
+
+    $("<img />", { src: config.currentStreak.url }).appendTo("#main");
+    $("#main")
+      .append(" 󠀀  󠀀  x" + config.currentStreak.streak + " " + config.emoteStreakEndingText)
+      .appendTo("#main");
+
+    gsap.to("#main", 0.15, {
+      scaleX: 1.2,
+      scaleY: 1.2,
+      onComplete: () => gsap.to("#main", 0.15, { scaleX: 1, scaleY: 1 }),
+    });
+
+    config.streakCooldown = new Date().getTime();
+    setInterval(() => {
+      if ((new Date().getTime() - config.streakCooldown) / 1000 > 4) {
+        config.streakCooldown = new Date().getTime();
+        gsap.to("#main", 0.2, {
+          scaleX: 0,
+          scaleY: 0,
+          delay: 0.5,
+          onComplete: () => (config.streakCooldown = new Date().getTime()),
+        });
+      }
+    }, 1000);
+  }
+};
+
+const showEmoteEvent = (url) => {
+  const secondsDiff = (new Date().getTime() - new Date(config.showEmoteCooldownRef).getTime()) / 1000;
+
+  if (secondsDiff > config.showEmoteCooldown) {
+    config.showEmoteCooldownRef = new Date();
+
+    $("#showEmote").empty();
+    const [x, y] = getRandomCoords();
+    $("#showEmote").css("position", "absolute");
+    $("#showEmote").css("left", x + "px");
+    $("#showEmote").css("top", y + "px");
+
+    $("<img />", {
+      src: url,
+      style: `transform: scale(${config.showEmoteSizeMultiplier}, ${config.showEmoteSizeMultiplier})`,
+    }).appendTo("#showEmote");
+
+    gsap.to("#showEmote", 1, {
+      autoAlpha: 1,
+      onComplete: () => gsap.to("#showEmote", 1, { autoAlpha: 0, delay: 4, onComplete: () => $("#showEmote").empty() }),
+    });
+  }
+};
+
+const connect = () => {
+  const chat = new WebSocket("wss://irc-ws.chat.twitch.tv");
+  const timeout = setTimeout(() => {
+    chat.close();
+    chat.connect();
+  }, 10000);
+
+  chat.onopen = function () {
+    clearInterval(timeout);
+    chat.send("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
+    chat.send("PASS oauth:xd123");
+    chat.send("NICK justinfan123");
+    chat.send("JOIN #" + config.channel);
+    console.log("Connected to Twitch IRC");
+    getEmotes();
+  };
+
+  chat.onerror = function () {
+    console.error("There was an error.. disconnected from the IRC");
+    chat.close();
+    chat.connect();
+  };
+
+  chat.onmessage = function (event) {
+    const fullMessage = event.data.split(/\r\n/)[0].split(`;`);
+    if (fullMessage.length > 12) {
+      const parsedMessage = fullMessage[fullMessage.length - 1].split(`${config.channel} :`).pop(); // gets the raw message
+      let message = parsedMessage.split(" ").includes("ACTION")
+        ? parsedMessage.split("ACTION ").pop().split("")[0]
+        : parsedMessage; // checks for the /me ACTION usage and gets the specific message
+      if (message.toLowerCase().startsWith("!showemote") || message.toLowerCase().startsWith("!#showemote")) {
+        showEmote(message, fullMessage);
+      }
+      findEmotes(message, fullMessage);
     }
-}
-
-function streakEvent() {
-    if (currentStreak.streak >= minStreak && streakEnabled == 1) {
-        $("#main").empty();
-        $("#main").css("position", "absolute");
-        $("#main").css("top", "600");
-        $("#main").css("left", "35");
-        var img = $("<img />", { src: currentStreak.emoteURL });
-        img.appendTo("#main");
-        var streakLength = $("#main").append(" 󠀀  󠀀  x" + currentStreak.streak + " " + emoteStreakText);
-        streakLength.appendTo("#main");
-        gsap.to("#main", 0.15, { scaleX: 1.2, scaleY: 1.2, onComplete: downscale });
-        function downscale() {
-            gsap.to("#main", 0.15, { scaleX: 1, scaleY: 1 });
-        }
-        streakCD = new Date().getTime();
-        setInterval(() => {
-            if ((new Date().getTime() - streakCD) / 1000 > 4) {
-                streakCD = new Date().getTime();
-                gsap.to("#main", 0.2, { scaleX: 0, scaleY: 0, delay: 0.5, onComplete: remove });
-                function remove() {
-                    streakCD = new Date().getTime();
-                }
-            }
-        }, 1 * 1000);
+    if (fullMessage.length == 1 && fullMessage[0].startsWith("PING")) {
+      console.log("sending pong");
+      chat.send("PONG");
     }
-}
-
-function showEmote(message, messageFull) {
-    if (emotes.length !== 0 && showEmoteEnabled == 1) {
-        let emoteUsedPos = messageFull[4].startsWith("emotes=") ? 4 : 5;
-        let emoteUsedID = messageFull[emoteUsedPos].split("emotes=").pop();
-        messageSplit = message.split(" ");
-        if (emoteUsedID.length == 0) {
-            let emoteUsed = findEmoteInMessage(messageSplit);
-            let emoteLink = findEmoteURLInEmotes(emoteUsed);
-            if (emoteLink) {
-                return showEmoteEvent({ emoteName: emoteUsed, emoteURL: emoteLink });
-            }
-        } else {
-            let emoteUsed = message.substring(parseInt(emoteUsedID.split(":")[1].split("-")[0]), parseInt(emoteUsedID.split(":")[1].split("-")[1]) + 1);
-            let emoteLink = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteUsedID.split(":")[0]}/default/dark/2.0`;
-            return showEmoteEvent({ emoteName: emoteUsed, emoteURL: emoteLink });
-        }
-        function findEmoteInMessage(message) {
-            for (const emote of emotes.map((a) => a.emoteName)) {
-                if (message.includes(emote)) {
-                    return emote;
-                }
-            }
-            return null;
-        }
-        function findEmoteURLInEmotes(emote) {
-            for (const emoteObj of emotes) {
-                if (emoteObj.emoteName == emote) {
-                    return emoteObj.emoteURL;
-                }
-            }
-            return null;
-        }
-    }
-}
-
-function showEmoteEvent(emote) {
-    let secondsDiff = (new Date().getTime() - new Date(showEmoteCooldownRef).getTime()) / 1000;
-    log(secondsDiff);
-    if (secondsDiff > parseInt(showEmoteCooldown)) {
-        showEmoteCooldownRef = new Date();
-        var image = emote.emoteURL;
-        var max_height = 720;
-        var max_width = 1280;
-        function getRandomCoords() {
-            var r = [];
-            var x = Math.floor(Math.random() * max_width);
-            var y = Math.floor(Math.random() * max_height);
-
-            r = [x, y];
-            return r;
-        }
-        function createImage() {
-            $("#showEmote").empty();
-            var xy = getRandomCoords();
-            $("#showEmote").css("position", "absolute");
-            $("#showEmote").css("top", xy[1] + "px");
-            $("#showEmote").css("left", xy[0] + "px");
-            log("creating showEmote");
-            var img = $("<img />", { src: image, style: `transform: scale(${showEmoteSizeMultiplier}, ${showEmoteSizeMultiplier})` });
-            img.appendTo("#showEmote");
-            gsap.to("#showEmote", 1, { autoAlpha: 1, onComplete: anim2 });
-            function anim2() {
-                gsap.to("#showEmote", 1, { autoAlpha: 0, delay: 4, onComplete: remove });
-            }
-            function remove() {
-                $("#showEmote").empty();
-            }
-        }
-        createImage();
-    }
-}
-
-// Connecting to twitch chat
-function connect() {
-    const chat = new WebSocket("wss://irc-ws.chat.twitch.tv");
-    var timeout = setTimeout(function () {
-        chat.close();
-        chat.connect();
-    }, 10 * 1000);
-
-    chat.onopen = function () {
-        clearInterval(timeout);
-        chat.send("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
-        chat.send("PASS oauth:xd123");
-        chat.send("NICK justinfan123");
-        chat.send("JOIN #" + channel);
-        getEmotes();
-    };
-
-    chat.onerror = function () {
-        log("There was an error.. disconnected from the IRC");
-        chat.close();
-        chat.connect();
-    };
-
-    chat.onmessage = function (event) {
-        let messageFull = event.data.split(/\r\n/)[0].split(`;`);
-        log(messageFull);
-        if (messageFull.length > 12) {
-            let messageBefore = messageFull[messageFull.length - 1].split(`${channel} :`).pop(); // gets the raw message
-            let message = messageBefore.split(" ").includes("ACTION") ? messageBefore.split("ACTION ").pop().split("")[0] : messageBefore; // checks for the /me ACTION usage and gets the specific message
-            if (message.toLowerCase().startsWith("!showemote") || message.toLowerCase().startsWith("!#showemote")) {
-                showEmote(message, messageFull);
-            }
-            findEmotes(message, messageFull);
-        }
-        if (messageFull.length == 1 && messageFull[0].startsWith("PING")) {
-            log("sending pong");
-            chat.send("PONG");
-        }
-    };
-}
+  };
+};
