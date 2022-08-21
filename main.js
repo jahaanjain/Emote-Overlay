@@ -32,74 +32,104 @@ const getEmotes = async () => {
     ).json()
   )?.[0].id;
 
-  await (await fetch(proxy + "https://api.frankerfacez.com/v1/room/" + config.channel)).json().then((data) => {
-    const emoteNames = Object.keys(data.sets);
-    for (let i = 0; i < emoteNames.length; i++) {
-      for (let j = 0; j < data.sets[emoteNames[i]].emoticons.length; j++) {
-        const emote = data.sets[emoteNames[i]].emoticons[j];
+  await (
+    await fetch(proxy + "https://api.frankerfacez.com/v1/room/" + config.channel)
+  )
+    .json()
+    .then((data) => {
+      const emoteNames = Object.keys(data.sets);
+      for (let i = 0; i < emoteNames.length; i++) {
+        for (let j = 0; j < data.sets[emoteNames[i]].emoticons.length; j++) {
+          const emote = data.sets[emoteNames[i]].emoticons[j];
+          config.emotes.push({
+            name: emote.name,
+            url: "https://" + (emote.urls["2"] || emote.urls["1"]).split("//").pop(),
+          });
+        }
+      }
+    })
+    .catch(console.error);
+
+  await (
+    await fetch(proxy + "https://api.frankerfacez.com/v1/set/global")
+  )
+    .json()
+    .then((data) => {
+      const emoteNames = Object.keys(data.sets);
+      for (let i = 0; i < emoteNames.length; i++) {
+        for (let j = 0; j < data.sets[emoteNames[i]].emoticons.length; j++) {
+          const emote = data.sets[emoteNames[i]].emoticons[j];
+          config.emotes.push({
+            name: emote.name,
+            url: "https://" + (emote.urls["2"] || emote.urls["1"]).split("//").pop(),
+          });
+        }
+      }
+    })
+    .catch(console.error);
+
+  await (
+    await fetch(proxy + "https://api.betterttv.net/3/cached/users/twitch/" + twitchId)
+  )
+    .json()
+    .then((data) => {
+      for (let i = 0; i < data.channelEmotes.length; i++) {
         config.emotes.push({
-          name: emote.name,
-          url: "https://" + (emote.urls["2"] || emote.urls["1"]).split("//").pop(),
+          name: data.channelEmotes[i].code,
+          url: `https://cdn.betterttv.net/emote/${data.channelEmotes[i].id}/2x`,
         });
       }
-    }
-  });
-
-  await (await fetch(proxy + "https://api.frankerfacez.com/v1/set/global")).json().then((data) => {
-    const emoteNames = Object.keys(data.sets);
-    for (let i = 0; i < emoteNames.length; i++) {
-      for (let j = 0; j < data.sets[emoteNames[i]].emoticons.length; j++) {
-        const emote = data.sets[emoteNames[i]].emoticons[j];
+      for (let i = 0; i < data.sharedEmotes.length; i++) {
         config.emotes.push({
-          name: emote.name,
-          url: "https://" + (emote.urls["2"] || emote.urls["1"]).split("//").pop(),
+          name: data.sharedEmotes[i].code,
+          url: `https://cdn.betterttv.net/emote/${data.sharedEmotes[i].id}/2x`,
         });
       }
-    }
-  });
+    })
+    .catch(console.error);
 
-  await (await fetch(proxy + "https://api.betterttv.net/3/cached/users/twitch/" + twitchId)).json().then((data) => {
-    for (let i = 0; i < data.channelEmotes.length; i++) {
-      config.emotes.push({
-        name: data.channelEmotes[i].code,
-        url: `https://cdn.betterttv.net/emote/${data.channelEmotes[i].id}/2x`,
-      });
-    }
-    for (let i = 0; i < data.sharedEmotes.length; i++) {
-      config.emotes.push({
-        name: data.sharedEmotes[i].code,
-        url: `https://cdn.betterttv.net/emote/${data.sharedEmotes[i].id}/2x`,
-      });
-    }
-  });
-
-  await (await fetch(proxy + "https://api.betterttv.net/3/cached/emotes/global")).json().then((data) => {
-    for (let i = 0; i < data.length; i++) {
-      config.emotes.push({
-        name: data[i].code,
-        url: `https://cdn.betterttv.net/emote/${data[i].id}/2x`,
-      });
-    }
-  });
+  await (
+    await fetch(proxy + "https://api.betterttv.net/3/cached/emotes/global")
+  )
+    .json()
+    .then((data) => {
+      for (let i = 0; i < data.length; i++) {
+        config.emotes.push({
+          name: data[i].code,
+          url: `https://cdn.betterttv.net/emote/${data[i].id}/2x`,
+        });
+      }
+    })
+    .catch(console.error);
 
   if (config.sevenTVEnabled) {
-    await (await fetch(proxy + `https://api.7tv.app/v2/users/${config.channel}/emotes`)).json().then((data) => {
-      for (let i = 0; i < data.length; i++) {
-        config.emotes.push({
-          name: data[i].name,
-          url: data[i].urls[1][1],
-        });
-      }
-    });
+    await (
+      await fetch(proxy + `https://api.7tv.app/v2/users/${config.channel}/emotes`)
+    )
+      .json()
+      .then((data) => {
+        for (let i = 0; i < data.length; i++) {
+          config.emotes.push({
+            name: data[i].name,
+            url: data[i].urls[1][1],
+          });
+        }
+      })
+      .catch(console.error);
 
-    await (await fetch(proxy + "https://api.7tv.app/v2/emotes/global")).json().then((data) => {
-      for (let i = 0; i < data.length; i++) {
-        config.emotes.push({
-          name: data[i].name,
-          url: data[i].urls[1][1],
-        });
-      }
-    });
+    await (
+      await fetch(proxy + "https://api.7tv.app/v2/emotes/global")
+    )
+      .json()
+      .then((data) => {
+        for (let i = 0; i < data.length; i++) {
+          config.emotes.push({
+            name: data[i].name,
+            url: data[i].urls[1][1],
+          });
+        }
+      })
+      .catch(console.error);
   }
 
   const successMessage = `Successfully loaded ${config.emotes.length} emotes for channel ${config.channel}`;
