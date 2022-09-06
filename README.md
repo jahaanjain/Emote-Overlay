@@ -7,7 +7,17 @@ The emotes are taken from Twitch, FFZ, BTTV, and optionally, 7TV.
 
 This project took direct inspiration from pajlada's pajbot, although I believe my version is easier to setup and use.
 
-# Example + Live Version
+---
+
+# Live Version:
+You can put this URL into your streaming software and use it! \
+Please scroll further down to see all the settings that you can tweak.
+
+### https://api.roaringiron.com/emoteoverlay?channel=forsen
+
+---
+
+# Examples:
 
 ## Emote Combo:
 
@@ -17,13 +27,9 @@ This project took direct inspiration from pajlada's pajbot, although I believe m
 
 ![Show Emote](https://i.imgur.com/987NJzD.gif)
 
-## Live Version:
+---
 
-(You can put this URL into your streaming software and use it!):
-
-https://api.roaringiron.com/emoteoverlay?channel=forsen
-
-# Usage & Available Parameters:
+# Usage & Available Parameters/Settings:
 
 To use these parameters, add them after the url with this format: "&(parameter)=(value)"
 For example, if I wanted to add the "minStreak" and the "7tv" parameter, my new URL would be "https://api.roaringiron.com/emoteoverlay?channel=forsen&minStreak=10&7tv=1"
@@ -54,3 +60,9 @@ For example, if I wanted to add the "minStreak" and the "7tv" parameter, my new 
     - Sets the ending text for the emote streak
     - For no text, add an empty `emoteStreakText=` to the end of the URL
     - Defaults to `Streak!`
+
+---
+
+## Development
+
+I welcome all developers to open a pull request or ticket with any new features or changes you'd like to see!
