@@ -60,7 +60,9 @@ For example, if I wanted to add the "minStreak" and the "7tv" parameter, my new 
     - Sets the ending text for the emote streak
     - For no text, add an empty `emoteStreakText=` to the end of the URL
     - Defaults to `Streak!`
-
+-   emoteLocation=*(1 for bottom left, 2 for top left, 3 for top right, 4 for bottom right)*
+    - Sets the emoteStreak position
+    - Defaults to 1
 ---
 
 ## Development

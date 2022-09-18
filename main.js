@@ -9,6 +9,7 @@ const config = {
   showEmoteCooldown: Number(url.searchParams.get("showEmoteCooldown") || 6),
   showEmoteSizeMultiplier: Number(url.searchParams.get("showEmoteSizeMultiplier") || 1),
   minStreak: Number(url.searchParams.get("minStreak") || 5),
+  emoteLocation: Number(url.searchParams.get("emoteLocation") || 1),
   emoteStreakEndingText: url.searchParams.get("emoteStreakText")?.replace(/(<([^>]+)>)/gi, "") ?? "streak!",
   showEmoteCooldownRef: new Date(),
   streakCooldown: new Date().getTime(),
@@ -202,8 +203,27 @@ const streakEvent = () => {
   if (config.currentStreak.streak >= config.minStreak && config.streakEnabled) {
     $("#main").empty();
     $("#main").css("position", "absolute");
-    $("#main").css("top", "600");
-    $("#main").css("left", "35");
+
+    switch (config.emoteLocation) {
+      default:
+      case 1:
+        $("#main").css("top", "600");
+        $("#main").css("left", "35");
+        break;
+      case 2:
+        $("#main").css("bottom", "600");
+        $("#main").css("left", "35");
+        break;
+      case 3:
+        $("#main").css("bottom", "600");
+        $("#main").css("right", "35");
+        break;
+      case 4:
+        $("#main").css("top", "600");
+        $("#main").css("right", "35");
+        break;
+    }
+
 
     $("<img />", { src: config.currentStreak.url }).appendTo("#main");
     $("#main")
