@@ -9,7 +9,7 @@ const config = {
   showEmoteCooldown: Number(url.searchParams.get("showEmoteCooldown") || 6),
   showEmoteSizeMultiplier: Number(url.searchParams.get("showEmoteSizeMultiplier") || 1),
   minStreak: Number(url.searchParams.get("minStreak") || 5),
-  emoteStreakEndingText: url.searchParams.get("emoteStreakText") ?? "streak!",
+  emoteStreakEndingText: url.searchParams.get("emoteStreakText")?.replace(/(<([^>]+)>)/gi, "") ?? "streak!",
   showEmoteCooldownRef: new Date(),
   streakCooldown: new Date().getTime(),
   emotes: [],
