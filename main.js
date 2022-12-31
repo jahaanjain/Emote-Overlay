@@ -299,8 +299,12 @@ const connect = () => {
   };
 
   chat.onmessage = function (event) {
-    const fullMessage = event.data.split(/\r\n/)[0].split(`;`);
-    if (fullMessage.length > 12) {
+    const usedMessage = event.data.split(/\r\n/)[0];
+    const textStart = usedMessage.indexOf(` `); // tag part ends at the first space
+    const fullMessage = usedMessage.slice(0, textStart).split(`;`); // gets the tag part and splits the tags
+    fullMessage.push(usedMessage.slice(textStart+1));
+    
+    if (fullMessage.length > 13) {
       const parsedMessage = fullMessage[fullMessage.length - 1].split(`${config.channel} :`).pop(); // gets the raw message
       let message = parsedMessage.split(" ").includes("ACTION")
         ? parsedMessage.split("ACTION ").pop().split("")[0]
@@ -310,7 +314,7 @@ const connect = () => {
       }
       findEmotes(message, fullMessage);
     }
-    if (fullMessage.length == 1 && fullMessage[0].startsWith("PING")) {
+    if (fullMessage.length == 2 && fullMessage[0].startsWith("PING")) {
       console.log("sending pong");
       chat.send("PONG");
     }
