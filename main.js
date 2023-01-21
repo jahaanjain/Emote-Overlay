@@ -5,7 +5,6 @@ const config = {
   currentStreak: { streak: 1, emote: "", url: "" },
   streakEnabled: !!Number(url.searchParams.get("streakEnabled") || 1),
   showEmoteEnabled: !!Number(url.searchParams.get("showEmoteEnabled") || 1),
-  sevenTVEnabled: !!Number(url.searchParams.get("7tv") || 0),
   showEmoteCooldown: Number(url.searchParams.get("showEmoteCooldown") || 6),
   showEmoteSizeMultiplier: Number(url.searchParams.get("showEmoteSizeMultiplier") || 1),
   minStreak: Number(url.searchParams.get("minStreak") || 5),
@@ -17,7 +16,8 @@ const config = {
 };
 
 const getEmotes = async () => {
-  const proxy = "https://tpbcors.herokuapp.com/";
+  // const proxy = "https://tpbcors.herokuapp.com/";
+  const proxy = "https://api.roaringiron.com/proxy/";
   console.log(config);
 
   if (!config.channel)
@@ -103,35 +103,33 @@ const getEmotes = async () => {
     })
     .catch(console.error);
 
-  if (config.sevenTVEnabled) {
-    await (
-      await fetch(proxy + `https://api.7tv.app/v2/users/${config.channel}/emotes`)
-    )
-      .json()
-      .then((data) => {
-        for (let i = 0; i < data.length; i++) {
-          config.emotes.push({
-            name: data[i].name,
-            url: data[i].urls[1][1],
-          });
-        }
-      })
-      .catch(console.error);
+  await (
+    await fetch(proxy + "https://api.7tv.app/v2/emotes/global")
+  )
+    .json()
+    .then((data) => {
+      for (let i = 0; i < data.length; i++) {
+        config.emotes.push({
+          name: data[i].name,
+          url: data[i].urls[1][1],
+        });
+      }
+    })
+    .catch(console.error);
 
-    await (
-      await fetch(proxy + "https://api.7tv.app/v2/emotes/global")
-    )
-      .json()
-      .then((data) => {
-        for (let i = 0; i < data.length; i++) {
-          config.emotes.push({
-            name: data[i].name,
-            url: data[i].urls[1][1],
-          });
-        }
-      })
-      .catch(console.error);
-  }
+  await (
+    await fetch(proxy + `https://api.7tv.app/v2/users/${config.channel}/emotes`)
+  )
+    .json()
+    .then((data) => {
+      for (let i = 0; i < data.length; i++) {
+        config.emotes.push({
+          name: data[i].name,
+          url: data[i].urls[1][1],
+        });
+      }
+    })
+    .catch(console.error);
 
   const successMessage = `Successfully loaded ${config.emotes.length} emotes for channel ${config.channel}`;
 
@@ -224,7 +222,6 @@ const streakEvent = () => {
         break;
     }
 
-
     $("<img />", { src: config.currentStreak.url }).appendTo("#main");
     $("#main")
       .append(" 󠀀  󠀀  x" + config.currentStreak.streak + " " + config.emoteStreakEndingText)
@@ -302,8 +299,8 @@ const connect = () => {
     const usedMessage = event.data.split(/\r\n/)[0];
     const textStart = usedMessage.indexOf(` `); // tag part ends at the first space
     const fullMessage = usedMessage.slice(0, textStart).split(`;`); // gets the tag part and splits the tags
-    fullMessage.push(usedMessage.slice(textStart+1));
-    
+    fullMessage.push(usedMessage.slice(textStart + 1));
+
     if (fullMessage.length > 13) {
       const parsedMessage = fullMessage[fullMessage.length - 1].split(`${config.channel} :`).pop(); // gets the raw message
       let message = parsedMessage.split(" ").includes("ACTION")
