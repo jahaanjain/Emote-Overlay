@@ -118,14 +118,15 @@ const getEmotes = async () => {
     .catch(console.error);
 
   await (
-    await fetch(proxy + `https://api.7tv.app/v2/users/${config.channel}/emotes`)
+    await fetch(proxy + "https://7tv.io/v3/users/twitch/" + twitchId)
   )
     .json()
     .then((data) => {
-      for (let i = 0; i < data.length; i++) {
+      const emoteSet = data["emote_set"]["emotes"];
+      for (let i = 0; i < emoteSet.length; i++) {
         config.emotes.push({
-          name: data[i].name,
-          url: data[i].urls[1][1],
+          name: emoteSet[i].name,
+          url: "https:" + emoteSet[i].data.host.url + "/" + emoteSet[i].data.host.files[2].name,
         });
       }
     })
