@@ -122,11 +122,13 @@ const getEmotes = async () => {
   )
     .json()
     .then((data) => {
-      const emoteSet = data["emote_set"]["emotes"];
-      for (let i = 0; i < emoteSet.length; i++) {
+      const emoteSet = data["emote_set"];
+      if (emoteSet === null) return;
+      const emotes = emoteSet["emotes"];
+      for (let i = 0; i < emotes.length; i++) {
         config.emotes.push({
-          name: emoteSet[i].name,
-          url: "https:" + emoteSet[i].data.host.url + "/" + emoteSet[i].data.host.files[2].name,
+          name: emotes[i].name,
+          url: "https:" + emotes[i].data.host.url + "/" + emotes[i].data.host.files[2].name,
         });
       }
     })
