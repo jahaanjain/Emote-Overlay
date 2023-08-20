@@ -156,7 +156,9 @@ const findUrlInEmotes = (emote) => {
   return null;
 };
 
-const getRandomCoords = () => [Math.floor(Math.random() * 720), Math.floor(Math.random() * 1280)];
+const max_width = 1280;
+const max_height = 720;
+const getRandomCoords = () => [Math.floor(Math.random() * max_height), Math.floor(Math.random() * max_width)];
 
 const showEmote = (message, rawMessage) => {
   if (config.showEmoteEnabled) {
@@ -257,9 +259,18 @@ const showEmoteEvent = (url) => {
 
     $("#showEmote").empty();
     const [x, y] = getRandomCoords();
-    $("#showEmote").css("position", "absolute");
-    $("#showEmote").css("left", x + "px");
-    $("#showEmote").css("top", y + "px");
+    const emoteEl = $("#showEmote");
+    emoteEl.css("position", "absolute");
+    if (x < max_width / 2) {
+      emoteEl.css("left", x + "px");
+    } else {
+      emoteEl.css("right", (max_width - x) + "px");
+    }
+    if (y < max_height / 2) {
+      emoteEl.css("top", y + "px");
+    } else {
+      emoteEl.css("bottom", (max_height - y) + "px");
+    }
 
     $("<img />", {
       src: url,
