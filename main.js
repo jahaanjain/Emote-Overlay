@@ -156,7 +156,7 @@ const findUrlInEmotes = (emote) => {
   return null;
 };
 
-const getRandomCoords = () => [Math.floor(Math.random() * 720), Math.floor(Math.random() * 1280)];
+const getRandomCoords = () => [Math.floor(Math.random() * 1280), Math.floor(Math.random() * 720)];
 
 const showEmote = (message, rawMessage) => {
   if (config.showEmoteEnabled) {
