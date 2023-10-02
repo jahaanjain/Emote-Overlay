@@ -158,10 +158,6 @@ const findUrlInEmotes = (emote) => {
   return null;
 };
 
-const max_width = 1280;
-const max_height = 720;
-const getRandomCoords = () => [Math.floor(Math.random() * max_width), Math.floor(Math.random() * max_height)];
-
 const showEmote = (message, rawMessage) => {
   if (config.showEmoteEnabled) {
     const emoteUsedPos = rawMessage[4].startsWith("emotes=") ? 4 : 5;
@@ -253,6 +249,8 @@ const streakEvent = () => {
   }
 };
 
+const getRandomPosPercent = () => [Math.floor(Math.random() * 100), Math.floor(Math.random() * 100)];
+
 const showEmoteEvent = (url) => {
   const secondsDiff = (new Date().getTime() - new Date(config.showEmoteCooldownRef).getTime()) / 1000;
 
@@ -260,25 +258,25 @@ const showEmoteEvent = (url) => {
     config.showEmoteCooldownRef = new Date();
 
     $("#showEmote").empty();
-    const [x, y] = getRandomCoords();
+    const [x, y] = getRandomPosPercent();
     const emoteEl = $("#showEmote");
     let torigin = ''
     // left
-    if (x < max_width / 2) {
-      emoteEl.css("grid-template-columns", `${x}px auto 1fr`);
+    if (x <= 50) {
+      emoteEl.css("grid-template-columns", `${x}% auto 1fr`);
       torigin += 'left';
     // right
     } else {
-      emoteEl.css("grid-template-columns", `1fr auto ${max_width - x}px`);
+      emoteEl.css("grid-template-columns", `1fr auto ${100 - x}%`);
       torigin += 'right';
     }
     // top
-    if (y < max_height / 2) {
-      emoteEl.css("grid-template-rows", `${y}px auto 1fr`);
+    if (y <= 50) {
+      emoteEl.css("grid-template-rows", `${y}% auto 1fr`);
       torigin += ' top';
     // bottom
     } else {
-      emoteEl.css("grid-template-rows", `1fr auto ${max_height - y}px`);
+      emoteEl.css("grid-template-rows", `1fr auto ${100 - y}%`);
       torigin += ' bottom';
     }
 
