@@ -1,6 +1,6 @@
 # Overview:
 
-This project is an overlay that shows emote streaks on the bottom left of the page. **_(Page dimensions are 1280px x 720px)_**  
+This project is an overlay that shows emote streaks on the bottom left of the page.  
 It can also show emotes randomly on screen if a chatter does !showemote (*emote_name*)  
 *This overlay can be used in streaming software like OBS*   
 The emotes are taken from Twitch, FFZ, BTTV, and 7TV.
