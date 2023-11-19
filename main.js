@@ -6,10 +6,14 @@ const config = {
   streakEnabled: !!Number(url.searchParams.get("streakEnabled") || 1),
   showEmoteEnabled: !!Number(url.searchParams.get("showEmoteEnabled") || 1),
   showEmoteCooldown: Number(url.searchParams.get("showEmoteCooldown") || 6),
-  showEmoteSizeMultiplier: Number(url.searchParams.get("showEmoteSizeMultiplier") || 1),
+  showEmoteSizeMultiplier: Number(
+    url.searchParams.get("showEmoteSizeMultiplier") || 1
+  ),
   minStreak: Number(url.searchParams.get("minStreak") || 5),
   emoteLocation: Number(url.searchParams.get("emoteLocation") || 1),
-  emoteStreakEndingText: url.searchParams.get("emoteStreakText")?.replace(/(<([^>]+)>)/gi, "") ?? "streak!",
+  emoteStreakEndingText:
+    url.searchParams.get("emoteStreakText")?.replace(/(<([^>]+)>)/gi, "") ??
+    "streak!",
   showEmoteCooldownRef: new Date(),
   streakCooldown: new Date().getTime(),
   emotes: [],
@@ -27,14 +31,19 @@ const getEmotes = async () => {
 
   const twitchId = (
     await (
-      await fetch(proxy + "https://api.ivr.fi/v2/twitch/user?login=" + config.channel, {
-        headers: { "User-Agent": "api.roaringiron.com/emoteoverlay" },
-      })
+      await fetch(
+        proxy + "https://api.ivr.fi/v2/twitch/user?login=" + config.channel,
+        {
+          headers: { "User-Agent": "api.roaringiron.com/emoteoverlay" },
+        }
+      )
     ).json()
   )?.[0].id;
 
   await (
-    await fetch(proxy + "https://api.frankerfacez.com/v1/room/" + config.channel)
+    await fetch(
+      proxy + "https://api.frankerfacez.com/v1/room/" + config.channel
+    )
   )
     .json()
     .then((data) => {
@@ -44,7 +53,9 @@ const getEmotes = async () => {
           const emote = data.sets[emoteNames[i]].emoticons[j];
           config.emotes.push({
             name: emote.name,
-            url: "https://" + (emote.urls["2"] || emote.urls["1"]).split("//").pop(),
+            url:
+              "https://" +
+              (emote.urls["2"] || emote.urls["1"]).split("//").pop(),
           });
         }
       }
@@ -62,7 +73,9 @@ const getEmotes = async () => {
           const emote = data.sets[emoteNames[i]].emoticons[j];
           config.emotes.push({
             name: emote.name,
-            url: "https://" + (emote.urls["2"] || emote.urls["1"]).split("//").pop(),
+            url:
+              "https://" +
+              (emote.urls["2"] || emote.urls["1"]).split("//").pop(),
           });
         }
       }
@@ -70,7 +83,9 @@ const getEmotes = async () => {
     .catch(console.error);
 
   await (
-    await fetch(proxy + "https://api.betterttv.net/3/cached/users/twitch/" + twitchId)
+    await fetch(
+      proxy + "https://api.betterttv.net/3/cached/users/twitch/" + twitchId
+    )
   )
     .json()
     .then((data) => {
@@ -128,7 +143,11 @@ const getEmotes = async () => {
       for (let i = 0; i < emotes.length; i++) {
         config.emotes.push({
           name: emotes[i].name,
-          url: "https:" + emotes[i].data.host.url + "/" + emotes[i].data.host.files[2].name,
+          url:
+            "https:" +
+            emotes[i].data.host.url +
+            "/" +
+            emotes[i].data.host.files[2].name,
         });
       }
     })
@@ -168,7 +187,9 @@ const showEmote = (message, rawMessage) => {
       const url = findUrlInEmotes(findEmoteInMessage(splitMessage));
       if (url) return showEmoteEvent(url);
     } else {
-      const url = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteUsed.split(":")[0]}/default/dark/2.0`;
+      const url = `https://static-cdn.jtvnw.net/emoticons/v2/${
+        emoteUsed.split(":")[0]
+      }/default/dark/2.0`;
       return showEmoteEvent(url);
     }
   }
@@ -177,18 +198,28 @@ const showEmote = (message, rawMessage) => {
 const findEmotes = (message, rawMessage) => {
   if (config.emotes.length === 0) return;
 
-  const emoteUsedPos = rawMessage[4].startsWith("emotes=") ? 4 : rawMessage[5].startsWith("emote-only=") ? 6 : 5;
+  const emoteUsedPos = rawMessage[4].startsWith("emotes=")
+    ? 4
+    : rawMessage[5].startsWith("emote-only=")
+    ? 6
+    : 5;
   const emoteUsed = rawMessage[emoteUsedPos].split("emotes=").pop();
   const splitMessage = message.split(" ").filter((a) => !!a.length);
 
-  if (splitMessage.includes(config.currentStreak.emote)) config.currentStreak.streak++;
-  else if (rawMessage[emoteUsedPos].startsWith("emotes=") && emoteUsed.length > 1) {
+  if (splitMessage.includes(config.currentStreak.emote))
+    config.currentStreak.streak++;
+  else if (
+    rawMessage[emoteUsedPos].startsWith("emotes=") &&
+    emoteUsed.length > 1
+  ) {
     config.currentStreak.streak = 1;
     config.currentStreak.emote = message.substring(
       parseInt(emoteUsed.split(":")[1].split("-")[0]),
       parseInt(emoteUsed.split(":")[1].split("-")[1]) + 1
     );
-    config.currentStreak.url = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteUsed.split(":")[0]}/default/dark/2.0`;
+    config.currentStreak.url = `https://static-cdn.jtvnw.net/emoticons/v2/${
+      emoteUsed.split(":")[0]
+    }/default/dark/2.0`;
   } else {
     config.currentStreak.streak = 1;
     config.currentStreak.emote = findEmoteInMessage(splitMessage);
@@ -225,7 +256,12 @@ const streakEvent = () => {
 
     $("<img />", { src: config.currentStreak.url }).appendTo("#main");
     $("#main")
-      .append(" 󠀀  󠀀  x" + config.currentStreak.streak + " " + config.emoteStreakEndingText)
+      .append(
+        " 󠀀  󠀀  x" +
+          config.currentStreak.streak +
+          " " +
+          config.emoteStreakEndingText
+      )
       .appendTo("#main");
 
     gsap.to("#main", 0.15, {
@@ -249,10 +285,15 @@ const streakEvent = () => {
   }
 };
 
-const getRandomPosPercent = () => [Math.floor(Math.random() * 100), Math.floor(Math.random() * 100)];
+const getRandomPosPercent = () => [
+  Math.floor(Math.random() * 100),
+  Math.floor(Math.random() * 100),
+];
 
 const showEmoteEvent = (url) => {
-  const secondsDiff = (new Date().getTime() - new Date(config.showEmoteCooldownRef).getTime()) / 1000;
+  const secondsDiff =
+    (new Date().getTime() - new Date(config.showEmoteCooldownRef).getTime()) /
+    1000;
 
   if (secondsDiff > config.showEmoteCooldown) {
     config.showEmoteCooldownRef = new Date();
@@ -260,34 +301,27 @@ const showEmoteEvent = (url) => {
     $("#showEmote").empty();
     const [x, y] = getRandomPosPercent();
     const emoteEl = $("#showEmote");
-    let torigin = ''
-    // left
-    if (x <= 50) {
-      emoteEl.css("grid-template-columns", `${x}% auto 1fr`);
-      torigin += 'left';
-    // right
-    } else {
-      emoteEl.css("grid-template-columns", `1fr auto ${100 - x}%`);
-      torigin += 'right';
-    }
-    // top
-    if (y <= 50) {
-      emoteEl.css("grid-template-rows", `${y}% auto 1fr`);
-      torigin += ' top';
-    // bottom
-    } else {
-      emoteEl.css("grid-template-rows", `1fr auto ${100 - y}%`);
-      torigin += ' bottom';
-    }
+
+    emoteEl.css({
+      position: "absolute", // Ensure the parent container has position: relative
+      left: `${x}%`,
+      top: `${y}%`,
+      transform: `translate(-50%, -50%)`, // Center the emote based on its own dimensions
+    });
 
     $("<img />", {
       src: url,
-      style: `transform: scale(${config.showEmoteSizeMultiplier}, ${config.showEmoteSizeMultiplier}); transform-origin: ${torigin};`,
-    }).appendTo("#showEmote");
+      style: `transform: scale(${config.showEmoteSizeMultiplier});`,
+    }).appendTo(emoteEl);
 
     gsap.to("#showEmote", 1, {
       autoAlpha: 1,
-      onComplete: () => gsap.to("#showEmote", 1, { autoAlpha: 0, delay: 4, onComplete: () => $("#showEmote").empty() }),
+      onComplete: () =>
+        gsap.to("#showEmote", 1, {
+          autoAlpha: 0,
+          delay: 4,
+          onComplete: () => $("#showEmote").empty(),
+        }),
     });
   }
 };
@@ -301,7 +335,9 @@ const connect = () => {
 
   chat.onopen = function () {
     clearInterval(timeout);
-    chat.send("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
+    chat.send(
+      "CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership"
+    );
     chat.send("PASS oauth:xd123");
     chat.send("NICK justinfan123");
     chat.send("JOIN #" + config.channel);
@@ -322,11 +358,16 @@ const connect = () => {
     fullMessage.push(usedMessage.slice(textStart + 1));
 
     if (fullMessage.length > 13) {
-      const parsedMessage = fullMessage[fullMessage.length - 1].split(`${config.channel} :`).pop(); // gets the raw message
+      const parsedMessage = fullMessage[fullMessage.length - 1]
+        .split(`${config.channel} :`)
+        .pop(); // gets the raw message
       let message = parsedMessage.split(" ").includes("ACTION")
         ? parsedMessage.split("ACTION ").pop().split("")[0]
         : parsedMessage; // checks for the /me ACTION usage and gets the specific message
-      if (message.toLowerCase().startsWith("!showemote") || message.toLowerCase().startsWith("!#showemote")) {
+      if (
+        message.toLowerCase().startsWith("!showemote") ||
+        message.toLowerCase().startsWith("!#showemote")
+      ) {
         showEmote(message, fullMessage);
       }
       findEmotes(message, fullMessage);
