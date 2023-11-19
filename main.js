@@ -104,14 +104,14 @@ const getEmotes = async () => {
     .catch(console.error);
 
   await (
-    await fetch(proxy + "https://api.7tv.app/v2/emotes/global")
+    await fetch(proxy + "https://7tv.io/v3/emote-sets/global")
   )
     .json()
     .then((data) => {
-      for (let i = 0; i < data.length; i++) {
+      for (let i = 0; i < data.emotes.length; i++) {
         config.emotes.push({
-          name: data[i].name,
-          url: data[i].urls[1][1],
+          name: data.emotes[i].name,
+          url: `https://cdn.7tv.app/emote/${data.emotes[i].id}/2x.webp`,
         });
       }
     })
